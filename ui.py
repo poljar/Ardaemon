@@ -138,38 +138,83 @@ class InputWidget(Widget):
     def __init__(self, win, x, y):
         Widget.__init__(self, win, x, y)
         self.ps = "# "
-        self.buf = ""
+        self.cursorPosition = len(self.ps)
 
     def draw(self):
         Widget.draw(self)
-        self.win.addstr(0, 0, self.ps + self.buf)
+        self.win.addstr(0, 0, self.ps)
+        self.refresh()
 
     def addch(self, c):
+        (backy, backx) = self.win.getyx()
+        oldch = self.win.inch()
         self.win.addch(c)
-        self.buf += c
 
-    def clearbuf(self):
-        self.buf = ""
+        self.addch(oldch)
+        self.win.move(backy, backx)
+        self.refresh()
+
+    def clear(self):
         self.win.move(0, 2)
         self.win.clrtoeol()
+        self.cursorPosition = len(self.ps)
+        self.refresh()
+
+    def gather(self):
+        (y, x) = self.screen.getmaxyx()
+        result = ""
+        for x in range(2, x):
+            result += chr(self.win.inch(0, x))
+
+        return result.strip()
+
+    def refresh(self):
+        (y, x) = self.screen.getmaxyx()
+        self.screen.move(y - 1, self.cursorPosition)
+        self.win.move(0, self.cursorPosition)
+        self.win.refresh()
 
     def handle_key(self, key):
-        #        print(ord(key))
-        if type(key) == int:
-            if key == curses.KEY_BACKSPACE:
-                if len(self.buf) == 0:
-                    pass
-                else:
-                    try:
-                        self.win.delch(0, 1 + len(self.buf))
-                        self.buf = self.buf[:-1]
-                    except:
-                        pass
-        elif len(key) == 1:
-            #TODO Handle unicode
-            if ord(key) > 31 and ord(key) < 128:
-                self.addch(key)
+        (y, x) = self.win.getyx()
 
+        if type(key) == int:
+            if key in (curses.KEY_BACKSPACE, curses.KEY_LEFT):
+                if x > len(self.ps):
+                    self.cursorPosition -= 1
+                    if key == curses.KEY_BACKSPACE:
+                        self.win.delch(0, x - 1)
+
+            elif key == curses.KEY_RIGHT:
+                (maxY, maxX) = self.screen.getmaxyx()
+                if x < maxX - 1 and x < len(self.gather() + self.ps):
+                    self.cursorPosition += 1
+
+        elif type(key) == str:
+            if ord(key) == curses.ascii.ETB:
+                self.win.move(0, len(self.ps))
+
+                for i in range (self.cursorPosition - len(self.ps)):
+                    self.win.delch()
+
+                self.win.move(0, len(self.ps))
+                self.cursorPosition = len(self.ps)
+
+            elif ord(key) == curses.ascii.SOH:
+                self.cursorPosition = len(self.ps)
+
+            elif ord(key) == curses.ascii.ENQ:
+                self.cursorPosition = len(self.gather() + self.ps)
+
+            elif ord(key) == curses.ascii.FF:
+                self.win.refresh()
+                self.screen.refresh()
+
+            elif key.isprintable():
+                (maxY, maxX) = self.screen.getmaxyx()
+                if x < maxX - 1:
+                    self.cursorPosition += 1
+                    self.addch(key)
+        self.refresh()
 
 class StatusWidget(Widget):
     def __init__(self, win, x, y):
@@ -215,12 +260,13 @@ class UI():
         if key == curses.KEY_RESIZE:
             self.resize()
             self.draw()
-            self.refresh()
-        elif key == '\n':
-            command = self.inwidget.buf
-            self.inwidget.clearbuf()
+
+        elif key in (curses.ascii.NL, curses.ascii.LF, curses.KEY_ENTER, '\n'):
+            command = self.inwidget.gather()
+            self.inwidget.clear()
             self.refresh()
             self.handle_command(command)
+
         else:
             self.inwidget.handle_key(key)
 
@@ -233,7 +279,7 @@ class UI():
             try:
                 c = self.win.get_wch()
                 self.handle_key(c)
-            except:
+            except curses.error:
                 self.tank.redraw()
 
         self.end()
