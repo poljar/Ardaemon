@@ -14,12 +14,11 @@ class Tank:
     def set_water_height(self, height):
         self.water_height = height
 
-
 class Widget:
-    def __init__(self, win):
+    def __init__(self, win, x=0, y=0):
         if win is not None:
             self.screen = win
-            self.win = win.derwin(1, 1, 0, 0)
+            self.win = win.subwin(1, 1, y, x)
 
     def draw(self):
         self.win.clear()
@@ -136,8 +135,8 @@ class TankWidget(Widget, Tank):
             pass
 
 class InputWidget(Widget):
-    def __init__(self, win):
-        Widget.__init__(self, win)
+    def __init__(self, win, x, y):
+        Widget.__init__(self, win, x, y)
         self.ps = "# "
         self.buf = ""
 
@@ -173,8 +172,9 @@ class InputWidget(Widget):
 
 
 class StatusWidget(Widget):
-    def __init__(self, win):
-        Widget.__init__(self, win)
+    def __init__(self, win, x, y):
+        Widget.__init__(self, win, x, y)
+        self.message = ""
 
     def draw(self):
         Widget.draw(self)
@@ -193,12 +193,15 @@ class UI():
         curses.use_default_colors()
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
-        self.win.keypad(1)
-        self.win.timeout(1000)
 
-        self.inwidget = InputWidget(self.win)
-        self.status = StatusWidget(self.win)
-        self.tank = tank_width_get(self.win, 10, 2)
+        self.win.keypad(1)
+        self.win.timeout(200)
+
+        height, width = self.win.getmaxyx()
+
+        self.inwidget = InputWidget(self.win, 0, height - 1)
+        self.status = StatusWidget(self.win, 0, height - 2)
+        self.tank = TankWidget(self.win, 10, 2)
         self.tank.set_water_height(1.0)
         self.quit = False
 
@@ -242,28 +245,24 @@ class UI():
         curses.endwin()
 
     def resize(self):
-        self.height, self.wid = self.win.getmaxyx()
-        self.inwidget.resize(self.height - 1, 0, 1, self.wid)
-        self.status.resize(self.height - 2, 0, 1, self.wid)
-        self.tank.resize(0, 0, self.height - 2, self.wid)
+        height, width = self.win.getmaxyx()
+        self.status.resize(height - 2, 0, 1, width)
+        self.inwidget.resize(height - 1, 0, 1, width)
+        self.tank.resize(0, 0, height - 2, width)
 
     def draw(self):
-        self.win.clear()
-        self.inwidget.draw()
-        self.status.draw()
         self.tank.draw()
+        self.status.draw()
+        self.inwidget.draw()
 
     def refresh(self):
         try:
-            self.inwidget.refresh()
             self.status.refresh()
             self.tank.refresh()
-            self.win.touchwin()
             self.win.refresh()
-            self.win.move(self.height - 1, 2 + len(self.inwidget.buf))
+            self.inwidget.refresh()
         except:
             pass
-
 
 def main(screen):
     ui = UI(screen)
