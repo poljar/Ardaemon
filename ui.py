@@ -2,8 +2,8 @@
 import locale
 import curses
 import random
+import math
 import curses.textpad
-
 
 class Tank:
     def __init__(self, height, bottom_area):
@@ -35,8 +35,7 @@ class Widget:
     def refresh(self):
         self.win.refresh()
 
-
-class tank_width_get(Widget, Tank):
+class TankWidget(Widget, Tank):
     def __init__(self, win, height, bottom_area):
         Widget.__init__(self, win)
         self.tank = Tank(height, bottom_area)
@@ -66,14 +65,22 @@ class tank_width_get(Widget, Tank):
         water = "~"
         tank_width = width - 15
         tank_height = height
+        fillLevel = tank_height * tank.water_height
 
         flow_pos = random.randint(1, 8)
         flow_line_in = "." * flow_pos + " " + "." * (7 - flow_pos)
         flow_pos = random.randint(1, 12)
         flow_line_out = "." * flow_pos + " " + "." * (11 - flow_pos)
 
-        in_pipe = ["     |", "_____|", flow_line_in, "-----i  .", "     |  .."]
-        out_pipe = ["|_______", flow_line_out, "i--------   .", "|           .."]
+        in_pipe = ["     |",
+                   "_____|",
+                   flow_line_in,
+                   "-----i  .",
+                   "     |  .."]
+
+        out_pipe = ["|_______",
+                    flow_line_out,
+                    "i--------   ."]
 
         for line in in_pipe:
             spacer = air
@@ -84,14 +91,15 @@ class tank_width_get(Widget, Tank):
                 pass
             i += 1
 
-        for j in range(0, tank_height - 9):
+        for j in range(0, tank_height - len(in_pipe)):
             line = " " * 5 + "|"
             spacern = tank_width - len(line)
             spacer = ""
+            currentPosition = tank_height - j
 
-            if (tank_height - j) == int(tank_height * tank.water_height):
+            if (currentPosition - 1) == math.ceil(fillLevel):
                 spacer = water * spacern
-            elif (tank_height - j) > int(tank_height * tank.water_height):
+            elif (currentPosition) > math.floor(fillLevel):
                 spacer = air * spacern
             else:
                 for k in range(0, spacern):
@@ -121,12 +129,11 @@ class tank_width_get(Widget, Tank):
                 pass
             i += 1
 
-        line = " " * 5 + "+" + "-" * (tank_width - 6) + "+"
+        line = " " * 5 + "+" + "-" * (tank_width - 6) + "+" + 11 * " " + ".."
         try:
             win.addstr(i, 5, line)
         except:
             pass
-
 
 class InputWidget(Widget):
     def __init__(self, win):
