@@ -226,8 +226,12 @@ class StatusWidget(Widget):
         height, wid = self.win.getmaxyx()
         self.win.attron(curses.color_pair(1))
         self.win.hline(0, 0, " ", wid)
+        self.win.addstr(0, 0, self.message)
         self.win.attroff(curses.color_pair(1))
 
+    def setMessage(self, msg):
+        self.message = "last command -> '" + msg + "'"
+        self.draw()
 
 class UI():
     def __init__(self, screen):
@@ -251,7 +255,7 @@ class UI():
         self.quit = False
 
     def handle_command(self, command):
-        if command == "/quit" or command == "/q":
+        if command in ("/quit", "/q"):
             self.quit = True
         else:
             pass
@@ -264,6 +268,7 @@ class UI():
         elif key in (curses.ascii.NL, curses.ascii.LF, curses.KEY_ENTER, '\n'):
             command = self.inwidget.gather()
             self.inwidget.clear()
+            self.status.setMessage(command)
             self.refresh()
             self.handle_command(command)
 
