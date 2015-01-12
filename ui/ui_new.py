@@ -35,10 +35,7 @@ class CommandLine(urwid.Pile):
     def keypress(self, size, key):
         """Handle keypresses and add emacs like keybindings."""
 
-        def cursor_to_end():
-            self.cmd.set_edit_pos(len(self.cmd.edit_text))
-
-        if key == 'enter':
+        def enter_handler():
             cmd = self.cmd.edit_text.split()
 
             if cmd:
@@ -48,29 +45,29 @@ class CommandLine(urwid.Pile):
                 self.handle_command(size, cmd[0], cmd[1:])
                 self.cmd.set_edit_text('')
 
-        elif key == 'ctrl p':
+        def hist_up():
             if self.history:
                 if self.hist_pos is None:
                     self.hist_pos = len(self.history) - 1
                     self.cmd.set_edit_text(self.history[self.hist_pos])
-                    cursor_to_end()
+                    mov_end()
 
                 elif self.hist_pos > 0:
                     self.hist_pos = self.hist_pos - 1
                     self.cmd.set_edit_text(self.history[self.hist_pos])
-                    cursor_to_end()
+                    mov_end()
 
-        elif key == 'ctrl n':
+        def hist_down():
             if self.history:
                 if self.hist_pos < len(self.history) - 1:
                     self.hist_pos = self.hist_pos + 1
                     self.cmd.set_edit_text(self.history[self.hist_pos])
-                    cursor_to_end()
+                    mov_end()
 
-        elif key == 'ctrl u':
+        def del_line():
             self.cmd.set_edit_text('')
 
-        elif key == 'ctrl w':
+        def del_word():
             cur_pos = self.cmd.edit_pos
             text = self.cmd.edit_text
             new_cur_pos = cur_pos - len(text)
@@ -78,16 +75,35 @@ class CommandLine(urwid.Pile):
             self.cmd.set_edit_text(text[cur_pos:])
             self.cmd.set_edit_pos(new_cur_pos)
 
-        elif key == 'ctrl a':
+        def mov_begin():
             self.cmd.set_edit_pos(0)
 
-        elif key == 'ctrl e':
-            cursor_to_end()
+        def mov_end():
+            self.cmd.set_edit_pos(len(self.cmd.edit_text))
 
-        elif key == 'ctrl j':
-            return self.keypress(size, 'enter')
+        def mov_back():
+            self.cmd.set_edit_pos(self.cmd.edit_pos - 1)
 
-        return super(CommandLine, self).keypress(size, key)
+        def mov_fwd():
+            self.cmd.set_edit_pos(self.cmd.edit_pos + 1)
+
+        bindings = {
+            'enter'  : enter_handler,
+            'ctrl a' : mov_begin,
+            'ctrl e' : mov_end,
+            'ctrl f' : mov_fwd,
+            'ctrl b' : mov_back,
+            'ctrl p' : hist_up,
+            'ctrl n' : hist_down,
+            'ctrl u' : del_line,
+            'ctrl w' : del_word,
+            'ctrl j' : enter_handler,
+        }
+
+        if key in bindings:
+            bindings[key]()
+        else:
+            return super(CommandLine, self).keypress(size, key)
 
     def handle_command(self, size, command, arguments):
         """Handle and dispatch commands."""
