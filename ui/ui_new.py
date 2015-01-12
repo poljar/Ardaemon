@@ -22,6 +22,7 @@ class CommandLine(urwid.Pile):
 
     def __init__(self, commands):
         """Inits CommandLine widget with a dict of commands."""
+
         self.commands = commands
         self.history = []
         self.hist_pos = None
@@ -107,6 +108,7 @@ class CommandLine(urwid.Pile):
 
     def handle_command(self, size, command, arguments):
         """Handle and dispatch commands."""
+
         if command in self.commands:
             self.commands[command](arguments)
         else:
@@ -115,15 +117,20 @@ class CommandLine(urwid.Pile):
 
 def quit_cmd(arguments):
     """Exit the program cleanly"""
+
     raise urwid.ExitMainLoop()
 
 
 def main():
-    palette = [('', 'default,bold', 'default', 'bold'),
-               ('status', 'white', 'dark blue'),]
+    palette = [
+            ('', 'default,bold', 'default', 'bold'),
+            ('status', 'white', 'dark blue'),
+    ]
 
-    cmd_list = {'quit'  : quit_cmd,
-                'q'     : quit_cmd,}
+    cmd_list = {
+            'quit'  : quit_cmd,
+            'q'     : quit_cmd,
+    }
 
     command_line = CommandLine(cmd_list)
 
