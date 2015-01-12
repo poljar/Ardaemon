@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import locale
 import curses
+import curses.ascii
 import random
 import math
-import curses.textpad
 
 class Tank:
     def __init__(self, height, bottom_area):
@@ -21,7 +21,7 @@ class Widget:
             self.win = win.subwin(1, 1, y, x)
 
     def draw(self):
-        self.win.clear()
+        self.win.erase()
 
     def resize(self, y, x, height, width):
         try:
@@ -29,7 +29,13 @@ class Widget:
         except:
             self.win.mvderwin(0, 0)
             self.win.resize(height, width)
-        self.win.mvderwin(y, x)
+
+        self.win.erase()
+
+        try:
+            self.win.mvderwin(y, x)
+        except:
+            pass
 
     def refresh(self):
         self.win.refresh()
@@ -138,35 +144,48 @@ class InputWidget(Widget):
     def __init__(self, win, x, y):
         Widget.__init__(self, win, x, y)
         self.ps = "# "
-        self.cursorPosition = len(self.ps)
+        self.psLength = len(self.ps)
+        self.buf = ""
+        self.cursorPosition = self.psLength
 
     def draw(self):
         Widget.draw(self)
-        self.win.addstr(0, 0, self.ps)
-        self.refresh()
+        self.win.addstr(0, 0, self.ps + self.buf)
 
-    def addch(self, c):
+    def _addch(self, c):
         (backy, backx) = self.win.getyx()
         oldch = self.win.inch()
         self.win.addch(c)
 
-        self.addch(oldch)
+        self._addch(oldch)
         self.win.move(backy, backx)
-        self.refresh()
+
+    def addch(self, c):
+        self._addchToBuf(c)
+        self.cursorPosition += 1
+        self._addch(c)
+
+    def delch(self, i):
+        self._delchFromBuf(i - 1)
+        self.win.delch(0, i - 1)
+
+    def _addchToBuf(self, c):
+        self.buf = self.buf[:self.cursorPosition - self.psLength] + str(c) + self.buf[self.cursorPosition - self.psLength:]
+
+    def _delchFromBuf(self, i):
+        self.buf = self.buf[:i - self.psLength] + self.buf[(i + 1) - self.psLength:]
+
+    def getBufLen(self):
+        return len(self.buf) + self.psLength
 
     def clear(self):
         self.win.move(0, 2)
         self.win.clrtoeol()
-        self.cursorPosition = len(self.ps)
-        self.refresh()
+        self.cursorPosition = self.psLength
+        self.buf = ""
 
-    def gather(self):
-        (y, x) = self.screen.getmaxyx()
-        result = ""
-        for x in range(2, x):
-            result += chr(self.win.inch(0, x))
-
-        return result.strip()
+    def getCommnad(self):
+        return self.buf
 
     def refresh(self):
         (y, x) = self.screen.getmaxyx()
@@ -179,31 +198,28 @@ class InputWidget(Widget):
 
         if type(key) == int:
             if key in (curses.KEY_BACKSPACE, curses.KEY_LEFT):
-                if x > len(self.ps):
+                if x > self.psLength:
                     self.cursorPosition -= 1
                     if key == curses.KEY_BACKSPACE:
-                        self.win.delch(0, x - 1)
+                        self.delch(x)
 
             elif key == curses.KEY_RIGHT:
                 (maxY, maxX) = self.screen.getmaxyx()
-                if x < maxX - 1 and x < len(self.gather() + self.ps):
+                if x < maxX - 1 and x < self.getBufLen():
                     self.cursorPosition += 1
 
         elif type(key) == str:
             if ord(key) == curses.ascii.ETB:
-                self.win.move(0, len(self.ps))
+                for i in range (x, self.psLength, -1):
+                    self.delch(i)
 
-                for i in range (self.cursorPosition - len(self.ps)):
-                    self.win.delch()
-
-                self.win.move(0, len(self.ps))
-                self.cursorPosition = len(self.ps)
+                self.cursorPosition = self.psLength
 
             elif ord(key) == curses.ascii.SOH:
-                self.cursorPosition = len(self.ps)
+                self.cursorPosition = self.psLength
 
             elif ord(key) == curses.ascii.ENQ:
-                self.cursorPosition = len(self.gather() + self.ps)
+                self.cursorPosition = self.getBufLen()
 
             elif ord(key) == curses.ascii.FF:
                 self.win.refresh()
@@ -212,7 +228,6 @@ class InputWidget(Widget):
             elif key.isprintable():
                 (maxY, maxX) = self.screen.getmaxyx()
                 if x < maxX - 1:
-                    self.cursorPosition += 1
                     self.addch(key)
         self.refresh()
 
@@ -266,7 +281,7 @@ class UI():
             self.draw()
 
         elif key in (curses.ascii.NL, curses.ascii.LF, curses.KEY_ENTER, '\n'):
-            command = self.inwidget.gather()
+            command = self.inwidget.getCommnad()
             self.inwidget.clear()
             self.status.setMessage(command)
             self.refresh()
@@ -308,6 +323,7 @@ class UI():
 
     def refresh(self):
         try:
+# FIXME this needs serious fixing, touchwin is wrong here
             self.status.refresh()
             self.tank.refresh()
             self.win.refresh()
