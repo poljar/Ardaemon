@@ -124,7 +124,8 @@ def main():
     palette = [('', 'default,bold', 'default', 'bold'),
                ('status', 'white', 'dark blue'),]
 
-    cmd_list = {'quit' : quit_cmd,}
+    cmd_list = {'quit'  : quit_cmd,
+                'q'     : quit_cmd,}
 
     command_line = CommandLine(cmd_list)
 
