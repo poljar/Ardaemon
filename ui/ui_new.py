@@ -107,8 +107,6 @@ class CommandLine(urwid.Pile):
 
     def handle_command(self, size, command, arguments):
         """Handle and dispatch commands."""
-        cmd_names = [x[0] for x in self.commands]
-
         if command in self.commands:
             self.commands[command](arguments)
         else:
