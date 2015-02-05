@@ -138,7 +138,9 @@ def main():
 
     top = urwid.Frame(fill, None, command_line, 'footer')
 
-    urwid.MainLoop(top, palette).run()
+    loop = urwid.MainLoop(top, palette)
+
+    loop.run()
 
 if __name__ == "__main__":
     main()
