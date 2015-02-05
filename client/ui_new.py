@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import json
 import urwid
+import asyncio
 
 
 class CommandLine(urwid.Pile):
@@ -138,7 +140,8 @@ def main():
 
     top = urwid.Frame(fill, None, command_line, 'footer')
 
-    loop = urwid.MainLoop(top, palette)
+    evl = urwid.AsyncioEventLoop(loop=asyncio.get_event_loop())
+    loop = urwid.MainLoop(top, palette, event_loop=evl)
 
     loop.run()
 
