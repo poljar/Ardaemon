@@ -2,6 +2,7 @@
 
 import json
 import urwid
+import socket
 import asyncio
 
 
@@ -15,6 +16,8 @@ class CommandLine(urwid.Pile):
 
     Attributes:
         commands: A dictionary containing command names and fucntions.
+        remote_cmds: A dictionary containing remote commands.
+        sock: A socket for the remote commands.
         history: Hisotry of last 20 entered commands.
         hist_pos: Currently selected position in the history.
         cmd: The input line widget.
@@ -22,10 +25,14 @@ class CommandLine(urwid.Pile):
         attr_map: Attribution map for the colored status line.
     """
 
-    def __init__(self, commands):
+    def __init__(self, commands, remote_cmds, sock):
         """Inits CommandLine widget with a dict of commands."""
 
         self.commands = commands
+
+        self.sock = sock
+        self.remote_cmds = remote_cmds
+
         self.history = []
         self.hist_pos = None
 
@@ -113,6 +120,16 @@ class CommandLine(urwid.Pile):
 
         if command in self.commands:
             self.commands[command](arguments)
+
+        elif command in self.remote_cmds:
+            f, _ = self.remote_cmds[command]
+            request, err = f(command, arguments)
+
+            if err:
+                self.status.set_text(request)
+            else:
+                self.sock.send(bytes(request, 'utf-8'))
+
         else:
             self.status.set_text('Invalid command: ' + command)
 
@@ -121,6 +138,43 @@ def quit_cmd(arguments):
     """Exit the program cleanly"""
 
     raise urwid.ExitMainLoop()
+
+
+def pack_json(payload):
+    return json.dumps(payload) + '\n'
+
+
+def seven_cmd(ID, arguments):
+    payload = {
+        "id": ID,
+        "jsonrpc": "2.0",
+        "method": "seven",
+    }
+
+    return pack_json(payload), None
+
+
+def add_cmd(ID, arguments):
+    try:
+        x, y = map(float, arguments)
+    except ValueError as e:
+        return "Invalid argument(s): " + str(e), -1
+
+    payload = {
+        "id": ID,
+        "jsonrpc": "2.0",
+        "method": "add",
+        "params": {
+            "x": x,
+            "y": y,
+        },
+    }
+
+    return pack_json(payload), None
+
+
+def seven_clbk(arguments):
+    pass
 
 
 def main():
@@ -134,16 +188,38 @@ def main():
             'q'     : quit_cmd,
     }
 
-    command_line = CommandLine(cmd_list)
+    remote_cmds = {
+            'add'   : (add_cmd, seven_clbk),
+            'seven' : (seven_cmd, seven_clbk)
+    }
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        sock.connect(('localhost', 4040))
+    except Exception as e:
+        print('Error connecting: ' + str(e))
+        return
+
+    command_line = CommandLine(cmd_list, remote_cmds, sock)
 
     fill = urwid.SolidFill(u'#')
 
     top = urwid.Frame(fill, None, command_line, 'footer')
 
     evl = urwid.AsyncioEventLoop(loop=asyncio.get_event_loop())
+
     loop = urwid.MainLoop(top, palette, event_loop=evl)
 
+    def read_cb():
+        data = sock.recv(4096)
+        command_line.status.set_text(data.strip())
+
+    loop.watch_file(sock.fileno(), read_cb)
+
     loop.run()
+
+    sock.close()
 
 if __name__ == "__main__":
     main()
