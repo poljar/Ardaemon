@@ -200,6 +200,7 @@ def main():
     except Exception as e:
         print('Error connecting: ' + str(e))
         return
+    sock_file = sock.makefile('r')
 
     command_line = CommandLine(cmd_list, remote_cmds, sock)
 
@@ -212,7 +213,7 @@ def main():
     loop = urwid.MainLoop(top, palette, event_loop=evl)
 
     def read_cb():
-        data = sock.recv(4096)
+        data = sock_file.readline()
         command_line.status.set_text(data.strip())
 
     loop.watch_file(sock.fileno(), read_cb)
