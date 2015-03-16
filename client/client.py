@@ -3,25 +3,71 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import math
 import json
 import urwid
 import socket
 import asyncio
-
-from pyparsing import *
+import drawille
 
 
 class TankWidget(urwid.Widget):
-    _sizing = frozenset(['flow'])
+    _sizing = frozenset([urwid.BOX])
+    frame = 0
+    canvas = drawille.Canvas()
+
+    def draw_tank(self, s, size, fill=0.0):
+        pipe_length = 15
+        max_x, max_y = size
+
+        # TODO this is a hack
+        max_y *= 4
+        max_x *= 2
+
+        max_x -= pipe_length * 3
+        max_y -= 15
+
+        water_height = math.floor((1 - fill) * max_y)
+
+        s.clear()
+
+        # Tank
+        [s.set(x,y) for x,y in drawille.line(pipe_length, 0, pipe_length, max_y)]
+        [s.set(x,y) for x,y in drawille.line(pipe_length, max_y,
+            max_x + pipe_length, max_y)]
+        [s.set(x,y) for x,y in drawille.line(max_x + pipe_length, 0,
+            max_x + pipe_length, max_y)]
+
+        # Sine wave of water level
+        [s.set(x/4, water_height + math.sin(math.radians(x + self.frame) * 12))
+            for x in range(pipe_length * 4, max_x * 4 + pipe_length * 4, 2)]
+
+        # Rest of the water
+        [[s.set(x, y) for x in range(pipe_length, max_x + pipe_length)]
+            for y in range(water_height + 2, max_y)]
+
+        self.frame += 1
+
+    def update(self):
+        pass
 
     def rows(self, size, focus=False):
-        return 1
+        col, row = size
+        return row
 
     def render(self, size, focus=False):
         col, row = size
-        num_pudding = int(col / len('#'))
-        string = '#' * num_pudding
-        return urwid.TextCanvas(text=[string.encode('utf-8')] * row, maxcol=col)
+
+        if col < 17:
+            ws = '\n' * (row - 1)
+            return urwid.Text(ws).render((col,))
+        elif col < 30 or row < 10:
+            ws = '\n' * (row - 1)
+            return urwid.Text('Not enough space!' + ws, align='center').render((col,))
+
+        self.draw_tank(self.canvas, size, 0.5)
+
+        return urwid.Text('\n\n' + self.canvas.frame() + '\n', align='center').render((col,))
 
 
 class CommandLine(urwid.Pile):
