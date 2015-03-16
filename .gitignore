@@ -1,0 +1,11 @@
+client/__pycache__/
+client/basic.py
+client/*.pyc
+daemon/*.hi
+daemon/*.o
+daemon/ardaemon
+doc/
+regulator/__pycache__/
+regulator/test.hs
+regulator/tutor.txt
+firmata_test/
