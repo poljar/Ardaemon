@@ -7,4 +7,4 @@ read: pdf
 	zathura ${filename}.pdf &
 
 clean:
-	rm -f ${filename}.{pdf,log,aux,out,bbl,blg}
+	rm -f *.{pdf,log,aux,out,bbl,blg}
