@@ -146,7 +146,11 @@ class CommandLine(urwid.Pile):
             text = self.cmd.edit_text
             new_cur_pos = cur_pos - len(text)
 
-            self.cmd.set_edit_text(text[cur_pos:])
+            text = text.split(' ')
+            new_cur_pos = cur_pos - len(text[-1])
+            text = ' '.join(text[:-1])
+
+            self.cmd.set_edit_text(text)
             self.cmd.set_edit_pos(new_cur_pos)
 
         def mov_begin():
