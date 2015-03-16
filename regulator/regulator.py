@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import pyfirmata
-from time import sleep, monotonic
-from math import pi
+from time import sleep
+
 
 class Board():
     def __init__(self, path):
@@ -13,8 +13,7 @@ class Board():
 
         self.chip_enable = self.board.get_pin('d:2:o')
 
-        self.sensor_pin = self.board.get_pin('d:4:i')
-        self.board.iterate()
+        self.sensor_pin = self.board.get_pin('a:0:i')
 
     def start(self, pwm_value):
         self.pwm_pin.write(pwm_value)
@@ -23,79 +22,52 @@ class Board():
     def stop(self):
         self.chip_enable.write(False)
 
-def pulse_to_flow(pulses, dt):
-    impulses_per_liter = 2500
-#    impulses_per_liter = 10500
-    pulses_per_sec = (pulses / dt)
-
-    return (pulses_per_sec / impulses_per_liter) * 1000
-
-def low_to_heigth(flow):
-    pipe_area = ((1.5 / 10) ** 2) * pi
-    g = 983.2
-
-    heigth = (flow ** 2) / ((pipe_area ** 2) * (2 * g))
-    return heigth + 1.5
-
-def control_loop(board):
+def control_loop(board, ref):
     board.board.sp.flushInput()
     board.board.sp.flushOutput()
-    board.start(0.25)
+
+    dt = 0.001
+    Kp = 4
+    Ki = 0.5
+    Kd = 0.1
+    reference = ref
+
+    integral = 0
 
     sensor = board.sensor_pin
 
     board.board.iterate()
-    pulse = sensor.value
-    start = monotonic()
+    height_voltage = sensor.value
+    previous_error = height_voltage
     try:
         while 1:
+            height_voltage = sensor.value * 5
+            height =  (height_voltage / 4.6) * 21.3
+            error = reference - height
+            integral = integral + error * dt
+            derivative = (height_voltage - previous_error) / dt
+            previous_error = height_voltage
+#            output = Kp * err # P
+#            output = Kp * error + Ki * integral # PI
+            output = Kp * error + Ki * integral + Kd * derivative # PID
+#            output = Kp * err
 
-            if pulse != sensor.value and sensor.value == False:
-                end = monotonic()
-                pulse_time = end - start
-                flow = pulse_to_flow(1, pulse_time)
-                print(sensor.value, pulse_time, start, end)
-                print("flow: " + str((flow * 60) / 1000) + " l/min")
-                print("height: " + str(low_to_heigth(flow)) + " cm")
-                start = monotonic()
+            output = output / 12
 
-            pulse = sensor.value
+            if output < 0.25:
+                output = 0.25
+                integral = integral - error * dt
+            elif output > 1.0:
+                integral = integral - error * dt
+                output = 1.0
 
-            sleep(0.001)
+            board.start(output)
+            print('output:', output, 'v:', height_voltage, 'height', height, 'cm')
+
+            sleep(dt)
             board.board.iterate()
 
     except KeyboardInterrupt:
         board.stop()
         board.board.sp.flushInput()
         board.board.sp.flushOutput()
-
-def init_board(path):
-    board = pyfirmata.Arduino(path)
-
-    pwm_pin = board.get_pin('d:3:o')
-    pwm_pin.mode = pyfirmata.PWM
-
-    chip_enable = board.get_pin('d:2:o')
-
-    sensor_pin = board.get_pin('d:4:i')
-    board.iterate()
-
-    return board
-
-def stop(board):
-    board.digital[2].write(False)
-
-def start(board):
-    board.digital[3].write(0.3)
-    board.digital[2].write(True)
-
-def loop(board):
-    board.iterate()
-
-    try:
-        while 1:
-            print(board.digital[4].read())
-            sleep(0.1)
-            board.iterate()
-    except KeyboardInterrupt:
-        return
