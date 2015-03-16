@@ -5,6 +5,21 @@ import urwid
 import socket
 import asyncio
 
+from pyparsing import *
+
+
+class TankWidget(urwid.Widget):
+    _sizing = frozenset(['flow'])
+
+    def rows(self, size, focus=False):
+        return 1
+
+    def render(self, size, focus=False):
+        col, row = size
+        num_pudding = int(col / len('#'))
+        string = '#' * num_pudding
+        return urwid.TextCanvas(text=[string.encode('utf-8')] * row, maxcol=col)
+
 
 class CommandLine(urwid.Pile):
     """Command line widget for urwid.
@@ -204,9 +219,9 @@ def main():
 
     command_line = CommandLine(cmd_list, remote_cmds, sock)
 
-    fill = urwid.SolidFill(u'#')
+    tank = TankWidget()
 
-    top = urwid.Frame(fill, None, command_line, 'footer')
+    top = urwid.Frame(tank, None, command_line, 'footer')
 
     evl = urwid.AsyncioEventLoop(loop=asyncio.get_event_loop())
 
@@ -221,6 +236,7 @@ def main():
     loop.run()
 
     sock.close()
+
 
 if __name__ == "__main__":
     main()
