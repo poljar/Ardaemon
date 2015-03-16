@@ -5,11 +5,11 @@ pump_test_times    = [45 60.0003 59.72 60.0026 60.0025 59.99];
 pump_test_flow = pump_test_volumes ./ pump_test_times;
 pump_test_kp = pump_test_flow ./ pump_test_voltages;
 
-nosle_radius = 0.5 / 10;        % cm
-tank_radius  = 6 / 2;           % cm
+nosle_radius = 3 / 20;          % cm
+tank_radius  = 80 / 20;         % cm
 
 g  = 983.2;                     % gravitational acceleration              - cm/s²
-h0 = 8;                         % operating point                         - cm
+h0 = 10;                        % operating point                         - cm
 A  = (tank_radius ^ 2) * pi;    % bottom area of the water tank           - cm²
 a  = (nosle_radius ^ 2) * pi;   % cross sectional area of the output pipe - cm²
 Ts = 1 / 10                     % sample time                             - s
@@ -19,6 +19,6 @@ kp = mean(pump_test_kp)         % pump constant                           - (cm�
 k1 = kp / A
 k2 = (a * sqrt(2 * g)) / (A * 2 * sqrt(h0))
 
-Gs = tf(k1, [1, k2])
+Gs = tf(k1, [1, k2])            % transfer function of the system         - cm / V
 
 Gd = c2d(Gs, Ts)
