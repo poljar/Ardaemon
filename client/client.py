@@ -13,10 +13,13 @@ import drawille
 
 class TankWidget(urwid.Widget):
     _sizing = frozenset([urwid.BOX])
+    ignore_focus = True
+
     frame = 0
+    fill = 0.0
     canvas = drawille.Canvas()
 
-    def draw_tank(self, s, size, fill=0.0):
+    def draw_tank(self, s, size):
         pipe_length = 15
         max_x, max_y = size
 
@@ -27,7 +30,7 @@ class TankWidget(urwid.Widget):
         max_x -= pipe_length * 3
         max_y -= 15
 
-        water_height = math.floor((1 - fill) * max_y)
+        water_height = math.floor((1 - self.fill) * max_y)
 
         s.clear()
 
@@ -48,8 +51,8 @@ class TankWidget(urwid.Widget):
 
         self.frame += 1
 
-    def update(self):
-        pass
+    def set_fill_level(self, fill):
+        self._invalidate()
 
     def rows(self, size, focus=False):
         col, row = size
@@ -65,7 +68,7 @@ class TankWidget(urwid.Widget):
             ws = '\n' * (row - 1)
             return urwid.Text('Not enough space!' + ws, align='center').render((col,))
 
-        self.draw_tank(self.canvas, size, 0.5)
+        self.draw_tank(self.canvas, size)
 
         return urwid.Text('\n\n' + self.canvas.frame() + '\n', align='center').render((col,))
 
