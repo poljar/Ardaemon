@@ -101,7 +101,9 @@ class CommandLine(urwid.Pile):
     def __init__(self, commands, remote_cmds, sock):
         """Inits CommandLine widget with a dict of commands."""
 
+        self.loop = None
         self.commands = commands
+        self.clear_count = 0
 
         self.sock = sock
         self.remote_cmds = remote_cmds
@@ -114,6 +116,21 @@ class CommandLine(urwid.Pile):
         self.attr_map = urwid.AttrMap(self.status, 'status')
 
         super(CommandLine, self).__init__([self.attr_map, self.cmd])
+
+    def set_loop(self, loop):
+        self.loop = loop
+
+    def set_status(self, txt):
+        self.status.set_text(txt)
+        self.clear_count += 1
+
+        def clear_status(loop, data):
+            self.clear_count -= 1
+
+            if self.clear_count == 0:
+                self.status.set_text('')
+
+        self.loop.set_alarm_in(5, clear_status)
 
     def keypress(self, size, key):
         """Handle keypresses and add emacs like keybindings."""
@@ -203,12 +220,12 @@ class CommandLine(urwid.Pile):
             request, err = f(command, arguments)
 
             if err:
-                self.status.set_text(request)
+                self.set_status(request)
             else:
                 self.sock.send(bytes(request, 'utf-8'))
 
         else:
-            self.status.set_text('Invalid command: ' + command)
+            self.set_status('Invalid command: ' + command)
 
 
 def quit_cmd(arguments):
@@ -252,12 +269,12 @@ def add_cmd(ID, arguments):
 
 def seven_clbk(data, loop, cmd, tank):
     result = data['result']
-    cmd.status.set_text('result: ' + str(result))
+    cmd.set_status('result: ' + str(result))
 
 
 def add_clbk(data, loop, cmd, tank):
     result = data['result']
-    cmd.status.set_text('result: ' + str(result))
+    cmd.set_status('result: ' + str(result))
 
 
 def main():
@@ -294,6 +311,8 @@ def main():
     evl = urwid.AsyncioEventLoop(loop=asyncio.get_event_loop())
 
     loop = urwid.MainLoop(top, palette, event_loop=evl)
+
+    command_line.set_loop(loop)
 
     def read_cb():
         data = sock_file.readline()
