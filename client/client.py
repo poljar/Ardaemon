@@ -244,8 +244,8 @@ def add_cmd(ID, arguments):
     return pack_json(payload), None
 
 
-def seven_clbk(arguments):
-    pass
+def seven_clbk(data, loop, cmd, tank):
+    cmd.status.set_text('hello world')
 
 
 def main():
@@ -285,7 +285,9 @@ def main():
 
     def read_cb():
         data = sock_file.readline()
-        command_line.status.set_text(data.strip())
+        data = json.loads(data)
+        _, f = remote_cmds[data['id']]
+        f(data, loop, command_line, tank)
 
     loop.watch_file(sock.fileno(), read_cb)
 
