@@ -1,0 +1,32 @@
+1. Introduction
+
+2. Arduino
+    1. Hardware
+    2. Software
+    3. Firmata
+    4. sensor and pump...
+
+3. Server
+    1. Intro
+    2. Functional programming
+    3. Haskell
+    4. json-rpc
+    5. server design
+
+4. Client
+    1. Python
+    2. Urwid
+    3. Drawille
+    4. event loop
+    5. client design
+
+5. Regulator
+    1. PI
+    2. Response
+    3. Tuning
+
+6. Conclusion
+7. Literature
+8. Abstract
+9. CV
+10. Appendix
