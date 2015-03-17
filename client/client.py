@@ -301,7 +301,13 @@ def main():
         _, f = remote_cmds[data['id']]
         f(data, loop, command_line, tank)
 
+    def periodic_tasks(loop, data):
+        tank.update()
+        loop.set_alarm_in(0.2, periodic_tasks)
+
     loop.watch_file(sock.fileno(), read_cb)
+
+    loop.set_alarm_in(0.2, periodic_tasks)
 
     loop.run()
 
