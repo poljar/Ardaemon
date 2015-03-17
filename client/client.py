@@ -16,7 +16,7 @@ class TankWidget(urwid.Widget):
     ignore_focus = True
 
     frame = 0
-    fill = 0.0
+    fill = 0.5
     canvas = drawille.Canvas()
 
     def draw_tank(self, s, size):
@@ -49,9 +49,15 @@ class TankWidget(urwid.Widget):
         [[s.set(x, y) for x in range(pipe_length, max_x + pipe_length)]
             for y in range(water_height + 2, max_y)]
 
-        self.frame += 1
-
     def set_fill_level(self, fill):
+        if fill > 1.0 or fill < 0:
+            return
+
+        self.fill = fill
+        self._invalidate()
+
+    def update(self):
+        self.frame += 1
         self._invalidate()
 
     def rows(self, size, focus=False):
