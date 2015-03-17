@@ -251,7 +251,13 @@ def add_cmd(ID, arguments):
 
 
 def seven_clbk(data, loop, cmd, tank):
-    cmd.status.set_text('hello world')
+    result = data['result']
+    cmd.status.set_text('result: ' + str(result))
+
+
+def add_clbk(data, loop, cmd, tank):
+    result = data['result']
+    cmd.status.set_text('result: ' + str(result))
 
 
 def main():
@@ -266,7 +272,7 @@ def main():
     }
 
     remote_cmds = {
-            'add'   : (add_cmd, seven_clbk),
+            'add'   : (add_cmd, add_clbk),
             'seven' : (seven_cmd, seven_clbk)
     }
 
