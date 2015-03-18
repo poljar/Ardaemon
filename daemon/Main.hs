@@ -4,8 +4,10 @@
 
 import Data.Maybe (fromMaybe)
 
+import Control.Concurrent.MVar
+import Control.Concurrent.Chan
 import Control.Exception
-import Control.Monad (forever)
+import Control.Monad.Reader
 import Control.Concurrent (forkIO)
 
 import Network
@@ -35,31 +37,34 @@ options = Options {
 main :: IO ()
 main = withSocketsDo $ do
     Options {..} <- cmdArgs options
+    pv <- newMVar 20
+    referenceChan <- newChan
+    let com = ProcCom pv referenceChan
 
     sock <- listenOn $ PortNumber $ fromInteger port
-    mainLoop sock
+    mainLoop sock com
 
 
-mainLoop :: Socket -> IO ()
-mainLoop sock = do
+mainLoop :: Socket -> ProcCom Int -> IO ()
+mainLoop sock com = do
     (hdl, _, _) <- accept sock
-    _ <- forkIO $ runConn hdl
-    mainLoop sock
+    _ <- forkIO $ runConn hdl com
+    mainLoop sock com
 
 
-handleMsg :: C.ByteString -> IO C.ByteString
-handleMsg msg = do
-            response <- call methods msg
+handleMsg :: ProcCom Int -> C.ByteString -> IO C.ByteString
+handleMsg com msg = do
+            response <- runReaderT (call methods msg) com
             return (fromMaybe "" response)
 
 
-runConn :: Handle -> IO ()
-runConn hdl = do
+runConn :: Handle -> ProcCom Int -> IO ()
+runConn hdl com = do
 
     handle (\(SomeException _) -> return ()) $ forever $ do
         contents <- fmap C.pack (hGetLine hdl)
         C.putStrLn contents
-        response <- mapM handleMsg $ C.lines contents
+        response <- mapM (handleMsg com) $ C.lines contents
         mapM_ (C.hPutStrLn hdl) response
 
     hClose hdl
