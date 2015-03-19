@@ -12,7 +12,7 @@ data ProcCom m = ProcCom {processVar :: MVar m, referenceChan :: Chan m}
 type Server = ReaderT (ProcCom Int) IO
 
 methods :: Methods Server
-methods = toMethods [add, seven, getLevel]
+methods = toMethods [add, seven, getLevel, setReference]
 
 add :: Method Server
 add = toMethod "add" f (Required "x" :+: Required "y" :+: ())
@@ -32,3 +32,11 @@ getLevel = toMethod "get-level" f ()
                 pv <- asks processVar
                 x <- liftIO $ readMVar pv
                 return x
+
+setReference :: Method Server
+setReference = toMethod "set-reference" f (Required "reference" :+: ())
+    where f :: Int -> RpcResult Server ()
+          f ref = do
+                refChan <- asks referenceChan
+                liftIO $ writeChan refChan ref
+                return ()
