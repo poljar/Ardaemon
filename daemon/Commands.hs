@@ -29,6 +29,6 @@ getLevel :: Method Server
 getLevel = toMethod "get-level" f ()
     where f :: RpcResult Server Int
           f = do
-                pv <- liftM processVar ask
+                pv <- asks processVar
                 x <- liftIO $ readMVar pv
                 return x
