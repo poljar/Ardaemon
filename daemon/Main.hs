@@ -54,8 +54,8 @@ mainLoop sock com = do
 
 handleMsg :: ProcCom Int -> C.ByteString -> IO C.ByteString
 handleMsg com msg = do
-            response <- runReaderT (call methods msg) com
-            return (fromMaybe "" response)
+    response <- runReaderT (call methods msg) com
+    return (fromMaybe "" response)
 
 
 runConn :: Handle -> ProcCom Int -> IO ()

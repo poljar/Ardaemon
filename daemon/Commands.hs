@@ -21,10 +21,9 @@ add = toMethod "add" f (Required "x" :+: Required "y" :+: ())
 
 seven :: Method Server
 seven = toMethod "seven" f ()
-        where
-        f :: RpcResult Server Double
-        f = return x
-        x = 7 :: Double
+    where f :: RpcResult Server Double
+          f = return x
+          x = 7 :: Double
 
 getLevel :: Method Server
 getLevel = toMethod "get-level" f ()
