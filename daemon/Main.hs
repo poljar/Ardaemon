@@ -13,7 +13,9 @@ import Control.Concurrent (forkIO, threadDelay)
 import Network
 import Network.JsonRpc.Server (call)
 
+import System.Exit
 import System.Console.CmdArgs
+import System.Directory (doesFileExist)
 import System.IO (Handle, hGetLine, hClose)
 
 import qualified Data.ByteString.Lazy.Char8 as C
@@ -22,21 +24,34 @@ import Commands
 
 
 data Options = Options {
-                     port      :: Integer,
-                     daemonize :: Bool
-                     } deriving (Show, Data, Typeable)
+     port        :: Integer,
+     arduinoPort :: FilePath
+     } deriving (Show, Data, Typeable)
 
 options :: Options
 options = Options {
-                port      = 4040  &= help "Listnening port",
-                daemonize = False &= help "Start daemon in background"
-                }
-                &= summary "Arduino control daemon 0.1"
+    port        = 4040            &= help "Listnening port",
+    arduinoPort = "/dev/ttyACM0"  &= help "Path to the arduino port"
+    }
+    &= summary "Arduino control daemon 0.1"
 
 
 main :: IO ()
 main = withSocketsDo $ do
     Options {..} <- cmdArgs options
+
+    pathValid <- doesFileExist arduinoPort
+
+    case pathValid of
+        True  -> startDaemon port arduinoPort
+        False -> do
+                putStrLn ("No such file: " ++ show(arduinoPort))
+                exitFailure
+
+
+startDaemon :: Integer -> FilePath -> IO ()
+startDaemon port _ = do
+    sock <- listenOn $ PortNumber $ fromInteger port
 
     pv <- newMVar 20
     referenceChan <- newChan
@@ -44,7 +59,6 @@ main = withSocketsDo $ do
 
     _ <- forkIO $ controllerBroker com
 
-    sock <- listenOn $ PortNumber $ fromInteger port
     mainLoop sock com
 
 
@@ -52,6 +66,7 @@ mainLoop :: Socket -> ProcCom Int -> IO ()
 mainLoop sock com = do
     (hdl, _, _) <- accept sock
     _ <- forkIO $ runConn hdl com
+
     mainLoop sock com
 
 
@@ -67,6 +82,7 @@ controllerBroker (ProcCom pvMVar refChan) = do
 
 controlLoop :: MVar Int -> MVar Int -> IO ()
 controlLoop refMVar pvMVar = forever $ do
+    -- connect to the arduino or exitFailure
     ref <- readMVar refMVar
     -- measure the PV here
     _ <- swapMVar pvMVar 15
