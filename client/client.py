@@ -277,6 +277,31 @@ def add_clbk(data, loop, cmd, tank):
     cmd.set_status('result: ' + str(result))
 
 
+def ref_cmd(ID, arguments):
+    if len(arguments) > 1:
+        return "To many arguments" , -1
+
+    try:
+        ref = float(arguments[0])
+    except ValueError as e:
+        return "Invalid argument(s): " + str(e), -1
+
+    payload = {
+        "id": ID,
+        "jsonrpc": "2.0",
+        "method": "set-reference",
+        "params": {
+            "reference": ref,
+        },
+    }
+
+    return pack_json(payload), None
+
+
+def ref_clbk(data, loop, cmd, tank):
+    pass
+
+
 def main():
     palette = [
             ('', 'default,bold', 'default', 'bold'),
@@ -289,8 +314,9 @@ def main():
     }
 
     remote_cmds = {
-            'add'   : (add_cmd, add_clbk),
-            'seven' : (seven_cmd, seven_clbk)
+            'add'           : (add_cmd, add_clbk),
+            'seven'         : (seven_cmd, seven_clbk),
+            'set-reference' : (ref_cmd, ref_clbk),
     }
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
