@@ -57,7 +57,7 @@ startDaemon :: Integer -> FilePath -> Bool -> IO ()
 startDaemon port arduinoPort simulate = do
     sock <- listenOn $ PortNumber $ fromInteger port
 
-    pv <- newMVar 20
+    pv <- newMVar 0
     referenceChan <- newChan
     let com = ProcCom pv referenceChan
 
