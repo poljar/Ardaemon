@@ -303,7 +303,11 @@ def ref_cmd(ID, arguments):
 
 
 def ref_clbk(data, loop, cmd, tank):
-    pass
+    try:
+        err = data['error']
+        cmd.set_status(err['message'])
+    except KeyError:
+        pass
 
 
 def lvl_cmd(ID, arguments):
