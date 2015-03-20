@@ -7,9 +7,11 @@ import Control.Concurrent.MVar
 import Control.Concurrent.Chan
 import Control.Monad.Reader
 
+type PVType = Double
+
 data ProcCom m = ProcCom {processVar :: MVar m, referenceChan :: Chan m}
 
-type Server = ReaderT (ProcCom Int) IO
+type Server = ReaderT (ProcCom PVType) IO
 
 methods :: Methods Server
 methods = toMethods [add, seven, getLevel, setReference]
@@ -27,7 +29,7 @@ seven = toMethod "seven" f ()
 
 getLevel :: Method Server
 getLevel = toMethod "get-level" f ()
-    where f :: RpcResult Server Int
+    where f :: RpcResult Server PVType
           f = do
                 pv <- asks processVar
                 x <- liftIO $ readMVar pv
@@ -35,7 +37,7 @@ getLevel = toMethod "get-level" f ()
 
 setReference :: Method Server
 setReference = toMethod "set-reference" f (Required "reference" :+: ())
-    where f :: Int -> RpcResult Server ()
+    where f :: PVType -> RpcResult Server ()
           f ref = do
                 refChan <- asks referenceChan
                 liftIO $ writeChan refChan ref
