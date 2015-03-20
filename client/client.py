@@ -194,6 +194,21 @@ class CommandLine(urwid.Pile):
         def mov_fwd():
             self.cmd.set_edit_pos(self.cmd.edit_pos + 1)
 
+        def complete_cmd():
+            filter_func = lambda x: x.startswith(self.cmd.edit_text)
+
+            commands = list(self.commands.keys()) + list(self.remote_cmds.keys())
+            completions = list(filter(filter_func, commands))
+
+            if len(completions) == 0:
+                pass
+            elif len(completions) == 1:
+                self.cmd.edit_text = str(completions[0]) + ' '
+                mov_end()
+            else:
+                status_txt = [x + ', ' for x in completions]
+                self.set_status(status_txt)
+
         bindings = {
             'enter'  : enter_handler,
             'ctrl a' : mov_begin,
@@ -206,6 +221,7 @@ class CommandLine(urwid.Pile):
             'ctrl u' : del_line,
             'ctrl w' : del_word,
             'ctrl j' : enter_handler,
+            'tab'    : complete_cmd,
         }
 
         if key in bindings:
