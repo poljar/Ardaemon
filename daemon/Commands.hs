@@ -6,6 +6,7 @@ import Network.JsonRpc.Server
 import Control.Concurrent.MVar
 import Control.Concurrent.Chan
 import Control.Monad.Reader
+import Control.Monad.Error (throwError)
 
 type PVType = Double
 
@@ -35,10 +36,21 @@ getLevel = toMethod "get-level" f ()
                 x <- liftIO $ readMVar pv
                 return x
 
+referenceIsValid :: PVType -> Bool
+referenceIsValid ref
+    | ref > 20   = False
+    | ref < 0    = False
+    | otherwise  = True
+
+referenceIsNotValid :: PVType -> Bool
+referenceIsNotValid ref = not $ referenceIsValid ref
+
 setReference :: Method Server
 setReference = toMethod "set-reference" f (Required "reference" :+: ())
     where f :: PVType -> RpcResult Server ()
           f ref = do
+                when (referenceIsNotValid ref) $ throwError invalidReference
+
                 refChan <- asks referenceChan
                 liftIO $ writeChan refChan ref
-                return ()
+          invalidReference = rpcError (-32000) "Reference out of range (0-20cm)!"
