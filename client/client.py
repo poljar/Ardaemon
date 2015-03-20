@@ -140,10 +140,10 @@ class CommandLine(urwid.Pile):
 
         def enter_handler():
             cmd = self.cmd.edit_text.split()
+            self.hist_pos = None
 
             if cmd:
                 self.history.append(self.cmd.edit_text)
-                self.hist_pos = None
 
                 self.handle_command(size, cmd[0], cmd[1:])
                 self.cmd.set_edit_text('')
