@@ -16,7 +16,7 @@ class TankWidget(urwid.Widget):
     ignore_focus = True
 
     frame = 0
-    fill = 0.5
+    fill = 0.0
     canvas = drawille.Canvas()
 
     def draw_tank(self, s, size):
@@ -50,11 +50,14 @@ class TankWidget(urwid.Widget):
             for y in range(water_height + 2, max_y)]
 
     def set_fill_level(self, fill):
+        fill /= 21
+
         if fill > 1.0 or fill < 0:
             return
 
-        self.fill = fill
-        self._invalidate()
+        if fill != self.fill:
+            self.fill = fill
+            self._invalidate()
 
     def update(self):
         self.frame += 1
@@ -320,6 +323,17 @@ def lvl_clbk(data, loop, cmd, tank):
     cmd.set_status('level: ' + str(result))
 
 
+def update_tank_clbk(data, loop, cmd, tank):
+    result = data['result']
+
+    try:
+        level = float(result)
+    except ValueError as e:
+        cmd.set_status('Invalid result from server!')
+
+    tank.set_fill_level(level)
+
+
 def main():
     palette = [
             ('', 'default,bold', 'default', 'bold'),
@@ -336,6 +350,7 @@ def main():
             'seven'         : (seven_cmd, seven_clbk),
             'set-reference' : (ref_cmd, ref_clbk),
             'get-level'     : (lvl_cmd, lvl_clbk),
+            'update-tank'   : (lvl_cmd, update_tank_clbk),
     }
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -366,7 +381,11 @@ def main():
         f(data, loop, command_line, tank)
 
     def periodic_tasks(loop, data):
+        request , _ = lvl_cmd('update-tank', [])
+        sock.send(bytes(request, 'utf-8'))
+
         tank.update()
+
         loop.set_alarm_in(0.3, periodic_tasks)
 
     loop.watch_file(sock.fileno(), read_cb)
