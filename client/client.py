@@ -298,8 +298,11 @@ def add_clbk(data, loop, cmd, tank):
 
 
 def ref_cmd(ID, arguments):
-    if len(arguments) > 1:
-        return "To many arguments" , -1
+    if len(arguments) < 1:
+        return "Argument needed!" , -1
+    elif len(arguments) > 1:
+        return "To many arguments!" , -1
+
 
     try:
         ref = float(arguments[0])
