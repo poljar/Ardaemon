@@ -302,6 +302,24 @@ def ref_clbk(data, loop, cmd, tank):
     pass
 
 
+def lvl_cmd(ID, arguments):
+    if len(arguments) != 0:
+        return "To many arguments" , -1
+
+    payload = {
+        "id": ID,
+        "jsonrpc": "2.0",
+        "method": "get-level",
+    }
+
+    return pack_json(payload), None
+
+
+def lvl_clbk(data, loop, cmd, tank):
+    result = data['result']
+    cmd.set_status('level: ' + str(result))
+
+
 def main():
     palette = [
             ('', 'default,bold', 'default', 'bold'),
@@ -317,6 +335,7 @@ def main():
             'add'           : (add_cmd, add_clbk),
             'seven'         : (seven_cmd, seven_clbk),
             'set-reference' : (ref_cmd, ref_clbk),
+            'get-level'     : (lvl_cmd, lvl_clbk),
     }
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
