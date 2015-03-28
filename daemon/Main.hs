@@ -44,13 +44,11 @@ main = withSocketsDo $ do
 
     pathValid <- doesFileExist arduinoPort
 
-    case pathValid of
-        True  -> startDaemon port arduinoPort simulate
-        False -> case simulate of
-            True  -> startDaemon port arduinoPort simulate
-            False -> do
-                putStrLn ("No such file: " ++ show(arduinoPort))
-                exitFailure
+    if pathValid || simulate then
+        startDaemon port arduinoPort simulate
+    else do
+        putStrLn ("No such file: " ++ show arduinoPort)
+        exitFailure
 
 
 startDaemon :: Integer -> FilePath -> Bool -> IO ()
@@ -78,9 +76,10 @@ controllerBroker :: FilePath -> Bool -> ProcCom PVType -> IO ()
 controllerBroker arduinoPort simulate (ProcCom pvMVar refChan) = do
     refMVar <- newMVar 0
 
-    _ <- case simulate of
-        True  -> forkIO $ simulatorLoop refMVar pvMVar
-        False -> forkIO $ controlLoop arduinoPort refMVar pvMVar
+    _ <- if simulate then
+            forkIO $ simulatorLoop refMVar pvMVar
+         else
+            forkIO $ controlLoop arduinoPort refMVar pvMVar
 
     forever $ do
         ref <- readChan refChan

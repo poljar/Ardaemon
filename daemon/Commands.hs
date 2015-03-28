@@ -33,8 +33,7 @@ getLevel = toMethod "get-level" f ()
     where f :: RpcResult Server PVType
           f = do
                 pv <- asks processVar
-                x <- liftIO $ readMVar pv
-                return x
+                liftIO $ readMVar pv
 
 referenceIsValid :: PVType -> Bool
 referenceIsValid ref
