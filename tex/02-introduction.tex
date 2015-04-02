@@ -1,11 +1,29 @@
 \newpage
-\section{Section 1}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+\section{Uvod}
 
-\subsection{Section 2}
-[...]
+Cilj diplomskog rada je ispitati mogućnost korištenja jeftinih mikroupravljača
+za jednostavne poslove automatizacije te omogućiti udaljeno upravljanje
+postrojenjem preko \emph{socket} \emph{server-a}.
+
+Kako bi se utvrdio cilj diplomskog rada pomoću mikroupravljača je simulirano
+postrojenje. Komunikacija prema računalu je ostvarena putem \emph{USB}
+sučelja. Računalo šalje naredbe prema mikroupravljaču pomoću komunikacijskog
+protokola. \emph{Socket} \emph{server} je izrađen tako da s jedne strane koristi
+navedeni protokol da bi komunicirao s mikroupravljačem, a s druge strane
+omogućuje klijentima upit u stanje postrojenja i postavljanje referentne
+varijable postrojenja.
+
+Za mikroupravljač je odabran \emph{Arduino Uno} koji preko USB-serijskog sučelja
+i preko \emph{Firmata} protokola komunicira s računalom. Na \emph{Arduino} je
+spojena vodena pumpa i senzor koji mjeri razinu vode u boci. Sustav od dvije
+boce čini postrojenje, u jednoj boci održava se razina vode. Na računalu se
+nalazi \emph{socket} \emph{server} pisan u \emph{Haskell-u} koji upravlja
+mikroupravljačem. Testni klijent pisan u \emph{Python-u} se spaja na
+\emph{server} te dohvaća mjernu veličinu (razinu vode u boci) i prikazuje
+trenutno stanje sustava.
+
+Rad je podijeljen u dva dijela. U prvom dijelu razrađene su teorijske
+pretpostavke vezane uz temu. Važno je napomenuti kako je u ovom dijelu detaljno
+opisan proces automatizacije i razvoj socket servera. Drugi dio bavi se
+implementacijom postrojenja, regulatora, \emph{socket server-a} i popratnog
+klijenta.
