@@ -19,15 +19,25 @@ class TankWidget(urwid.Widget):
     fill = 0.0
     canvas = drawille.Canvas()
 
+    def draw_water_line(self, canvas, size, margin):
+        max_x, max_y = size
+
+        water_height = math.floor((1 - self.fill) * max_y)
+
+        # Sine wave of water level
+        [canvas.set(x/4, water_height + math.sin(math.radians(x + self.frame) * 12))
+            for x in range(margin * 4, max_x * 4 + margin * 4, 2)]
+
+
     def draw_tank(self, s, size):
-        pipe_length = 15
+        margin = 15
         max_x, max_y = size
 
         # TODO this is a hack
         max_y *= 4
         max_x *= 2
 
-        max_x -= pipe_length * 3
+        max_x -= margin * 3
         max_y -= 15
 
         water_height = math.floor((1 - self.fill) * max_y)
@@ -35,18 +45,16 @@ class TankWidget(urwid.Widget):
         s.clear()
 
         # Tank
-        [s.set(x,y) for x,y in drawille.line(pipe_length, 0, pipe_length, max_y)]
-        [s.set(x,y) for x,y in drawille.line(pipe_length, max_y,
-            max_x + pipe_length, max_y)]
-        [s.set(x,y) for x,y in drawille.line(max_x + pipe_length, 0,
-            max_x + pipe_length, max_y)]
+        [s.set(x,y) for x,y in drawille.line(margin, 0, margin, max_y)]
+        [s.set(x,y) for x,y in drawille.line(margin, max_y,
+            max_x + margin, max_y)]
+        [s.set(x,y) for x,y in drawille.line(max_x + margin, 0,
+            max_x + margin, max_y)]
 
-        # Sine wave of water level
-        [s.set(x/4, water_height + math.sin(math.radians(x + self.frame) * 12))
-            for x in range(pipe_length * 4, max_x * 4 + pipe_length * 4, 2)]
+        self.draw_water_line(s, (max_x, max_y), margin)
 
         # Rest of the water
-        [[s.set(x, y) for x in range(pipe_length, max_x + pipe_length)]
+        [[s.set(x, y) for x in range(margin, max_x + margin)]
             for y in range(water_height + 2, max_y)]
 
     def set_fill_level(self, fill):
