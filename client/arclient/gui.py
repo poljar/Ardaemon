@@ -17,10 +17,26 @@ class TankWidget(urwid.Widget):
 
     frame = 0
     fill = 0.0
+
+    margin = 15
+
     canvas = drawille.Canvas()
 
-    def draw_water_line(self, canvas, size, margin):
+    # TODO this is a hack
+    def adjust_size(self, size):
         max_x, max_y = size
+
+        max_y *= 4
+        max_x *= 2
+
+        max_x -= self.margin * 3
+        max_y -= 15
+
+        return (max_x, max_y)
+
+    def draw_water_line(self, canvas, size):
+        max_x, max_y = self.adjust_size(size)
+        margin = self.margin
 
         water_height = math.floor((1 - self.fill) * max_y)
 
@@ -30,15 +46,9 @@ class TankWidget(urwid.Widget):
 
 
     def draw_tank(self, s, size):
-        margin = 15
-        max_x, max_y = size
+        max_x, max_y = self.adjust_size(size)
 
-        # TODO this is a hack
-        max_y *= 4
-        max_x *= 2
-
-        max_x -= margin * 3
-        max_y -= 15
+        margin = self.margin
 
         water_height = math.floor((1 - self.fill) * max_y)
 
@@ -51,7 +61,7 @@ class TankWidget(urwid.Widget):
         [s.set(x,y) for x,y in drawille.line(max_x + margin, 0,
             max_x + margin, max_y)]
 
-        self.draw_water_line(s, (max_x, max_y), margin)
+        self.draw_water_line(s, size)
 
         # Rest of the water
         [[s.set(x, y) for x in range(margin, max_x + margin)]
