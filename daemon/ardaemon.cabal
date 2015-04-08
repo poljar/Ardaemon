@@ -11,5 +11,5 @@ executable ardaemon
   main-is:             Main.hs
   other-modules:       Commands
   other-extensions:    OverloadedStrings, RecordWildCards, DeriveDataTypeable
-  build-depends:       base >=4.7 && <4.8, json-rpc-server >=0.1 && <0.2, mtl >=2.1 && <2.2, network >=2.6 && <2.7, cmdargs >=0.10 && <0.11, directory >=1.2 && <1.3, bytestring >=0.10 && <0.11
+  build-depends:       base >=4.7 && < 4.9, json-rpc-server >=0.1, mtl >=2.1, network >=2.6, cmdargs >=0.10, directory >=1.2, bytestring >=0.10
   default-language:    Haskell2010
