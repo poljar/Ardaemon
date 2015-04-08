@@ -6,8 +6,7 @@ import Data.Maybe (fromMaybe)
 
 import Control.Concurrent.MVar
 import Control.Concurrent.Chan
-import Control.Exception
-import Control.Monad.Reader
+import Control.Monad.Reader (forever, runReaderT)
 import Control.Concurrent (forkIO, threadDelay)
 
 import Network
@@ -16,7 +15,7 @@ import Network.JsonRpc.Server (call)
 import System.Exit
 import System.Console.CmdArgs
 import System.Directory (doesFileExist)
-import System.IO (Handle, hGetLine, hClose)
+import System.IO (Handle, hGetLine, hIsEOF, hClose)
 
 import qualified Data.ByteString.Lazy.Char8 as C
 
@@ -116,11 +115,13 @@ handleMsg com msg = do
 
 runConn :: Handle -> ProcCom PVType -> IO ()
 runConn hdl com = do
+        isEof <- hIsEOF hdl
 
-    handle (\(SomeException _) -> return ()) $ forever $ do
-        contents <- fmap C.pack (hGetLine hdl)
-        C.putStrLn contents
-        response <- mapM (handleMsg com) $ C.lines contents
-        mapM_ (C.hPutStrLn hdl) response
-
-    hClose hdl
+        if isEof then
+            hClose hdl
+        else do
+            contents <- fmap C.pack (hGetLine hdl)
+            C.putStrLn contents
+            response <- mapM (handleMsg com) $ C.lines contents
+            mapM_ (C.hPutStrLn hdl) response
+            runConn hdl com
