@@ -1,10 +1,14 @@
 client/__pycache__/
 client/basic.py
 client/*.pyc
+client/arclient.egg-info/
+client/dist/
 daemon/*.hi
 daemon/*.o
 daemon/dist
 daemon/ardaemon
+daemon/.cabal-sandbox/
+daemon/cabal.sandbox.config
 doc/
 regulator/__pycache__/
 regulator/test.hs
