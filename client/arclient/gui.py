@@ -19,6 +19,12 @@ class TankWidget(urwid.Widget):
     fill = 0.0
 
     margin = 15
+    fill_changed  = False
+    size_changed  = False
+    size = (0, 0)
+
+    water_cache = None
+    water_line_cache = None
 
     canvas = drawille.Canvas()
 
@@ -35,24 +41,68 @@ class TankWidget(urwid.Widget):
         return (max_x, max_y)
 
     def draw_water_line(self, canvas, size):
-        max_x, max_y = self.adjust_size(size)
-        margin = self.margin
+        # Sine wave of water level
+        if not self.water_line_cache:
+            max_x, max_y = self.adjust_size(size)
+            margin = self.margin + 1
+            water_height = math.floor((1 - self.fill) * max_y)
 
+            self.water_line_cache = [[(x/4, water_height + math.sin(math.radians(x + frame) * 12))
+                for x in range((margin + 1)* 4, max_x * 4 + margin * 4, 2)] for frame in range(10)]
+
+        if self.frame > 0:
+            [canvas.unset(x, y) for (x, y) in self.water_line_cache[self.frame - 1]]
+
+        if self.frame == 9:
+            self.frame = 0
+
+        [canvas.set(x, y) for (x, y) in self.water_line_cache[self.frame]]
+
+    def draw_water(self, canvas, size):
+        max_x, max_y = self.adjust_size(size)
+
+        margin = self.margin
         water_height = math.floor((1 - self.fill) * max_y)
 
-        # Sine wave of water level
-        [canvas.set(x/4, water_height + math.sin(math.radians(x + self.frame) * 12))
-            for x in range(margin * 4, max_x * 4 + margin * 4, 2)]
+        if (self.water_cache):
+            [canvas.unset(x, y) for (x, y) in self.water_cache]
+
+        # Rest of the water
+        self.water_cache = [(x, y) for x in range(margin + 1, max_x + margin)
+            for y in range(water_height + 2, max_y)]
+
+        [canvas.set(x, y) for (x, y) in self.water_cache]
+
+
+    def draw(self, s, size):
+        if self.size_changed:
+            s.clear()
+            self.water_line_cache = None
+            self.draw_tank(s, size)
+            self.draw_water(s, size)
+            self.draw_water_line(s, size)
+
+            self.size_changed = False
+
+            return
+
+        elif self.fill_changed:
+            self.water_line_cache = None
+            self.draw_water(s, size)
+#            self.draw_water_line(s, size)
+
+            self.fill_changed = False
+            return
+
+        else:
+            self.draw_water_line(s, size)
+            return
 
 
     def draw_tank(self, s, size):
         max_x, max_y = self.adjust_size(size)
 
         margin = self.margin
-
-        water_height = math.floor((1 - self.fill) * max_y)
-
-        s.clear()
 
         # Tank
         [s.set(x,y) for x,y in drawille.line(margin, 0, margin, max_y)]
@@ -61,11 +111,6 @@ class TankWidget(urwid.Widget):
         [s.set(x,y) for x,y in drawille.line(max_x + margin, 0,
             max_x + margin, max_y)]
 
-        self.draw_water_line(s, size)
-
-        # Rest of the water
-        [[s.set(x, y) for x in range(margin, max_x + margin)]
-            for y in range(water_height + 2, max_y)]
 
     def set_fill_level(self, fill):
         fill /= 21
@@ -73,9 +118,11 @@ class TankWidget(urwid.Widget):
         if fill > 1.0 or fill < 0:
             return
 
-        if fill != self.fill:
+        if math.fabs(fill - self.fill) > 0.01:
             self.fill = fill
+            self.fill_changed = True
             self._invalidate()
+
 
     def update(self):
         self.frame += 1
@@ -88,6 +135,9 @@ class TankWidget(urwid.Widget):
     def render(self, size, focus=False):
         col, row = size
 
+        if self.size != size:
+            self.size_changed = True
+
         if col < 17:
             ws = '\n' * (row - 1)
             return urwid.Text(ws).render((col,))
@@ -95,7 +145,9 @@ class TankWidget(urwid.Widget):
             ws = '\n' * (row - 1)
             return urwid.Text('Not enough space!' + ws, align='center').render((col,))
 
-        self.draw_tank(self.canvas, size)
+        self.draw(self.canvas, size)
+
+        self.size = size
 
         return urwid.Text('\n\n' + self.canvas.frame() + '\n', align='center').render((col,))
 
@@ -151,7 +203,7 @@ class CommandLine(urwid.Pile):
             if self.clear_count == 0:
                 self.status.set_text('')
 
-        self.loop.set_alarm_in(5, clear_status)
+#        self.loop.set_alarm_in(5, clear_status)
 
     def keypress(self, size, key):
         """Handle keypresses and add emacs like keybindings."""
@@ -428,11 +480,11 @@ def main():
 
         tank.update()
 
-        loop.set_alarm_in(0.3, periodic_tasks)
+        loop.set_alarm_in(0.4, periodic_tasks)
 
     loop.watch_file(sock.fileno(), read_cb)
 
-    loop.set_alarm_in(0.3, periodic_tasks)
+    loop.set_alarm_in(0.01, periodic_tasks)
 
     loop.run()
 
