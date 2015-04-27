@@ -38,27 +38,30 @@ controlLoop arduinoPath refMVar pvMVar = withArduino False arduinoPath $ do
             let error = reference - fillHeight
 
             let proportional_term = kp * error
+            let integral_term     = integral + ki * error / fromIntegral sampleTime
 
-            let newIntegral = if proportional_term < maxOut &&
-                                 proportional_term > minOut then
-                                  (integral + error / fromIntegral sampleTime) * ki
-                              else
-                                  integral
+            let piOut = proportional_term + integral_term
 
-            let output = clampAndScaleOutput $ kp * error + newIntegral
+            let new_integral = if piOut > maxOut ||
+                                   piOut < minOut then
+                                    integral
+                                else
+                                    integral_term
 
-            liftIO $ putMVar integralMVar newIntegral
+            let output = clampAndScaleOutput $ proportional_term + new_integral
+
+            liftIO $ putMVar integralMVar new_integral
 
             liftIO $ putStrLn ("Ref: " ++ show reference ++ " sensorValue: "
                                ++ show sensorValue ++ " height: " ++ show fillHeight)
 
-            liftIO $ putStrLn ("Error: " ++ show error ++ " integral: " ++ show newIntegral)
+            liftIO $ putStrLn ("Error: " ++ show error ++ " integral: " ++ show new_integral)
 
             analogWrite pwm_pin output
             delay sampleTime
         where
                 kp = 4
-                ki = 1
+                ki = 1.5
                 minOut = 3
                 maxOut = 12
                 sampleTime = 100
