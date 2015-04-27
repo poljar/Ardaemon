@@ -8,6 +8,7 @@ import Control.Concurrent.MVar
 import Control.Concurrent.Chan
 import Control.Monad.Reader (forever, runReaderT)
 import Control.Concurrent (forkIO, threadDelay)
+import Control.Monad.Trans (liftIO)
 
 import Network
 import Network.JsonRpc.Server (call)
@@ -19,13 +20,19 @@ import System.IO (Handle, hGetLine, hIsEOF, hClose)
 
 import qualified Data.ByteString.Lazy.Char8 as C
 
+import System.Hardware.Arduino
+import System.Hardware.Serialport
+import qualified Data.ByteString as B
+import Data.Word (Word8)
+
+
 import Commands
 
 
 data Options = Options {
      port        :: Integer,
      arduinoPort :: FilePath,
-     simulate :: Bool
+     simulate    :: Bool
      } deriving (Show, Data, Typeable)
 
 options :: Options
@@ -58,9 +65,9 @@ startDaemon port arduinoPort simulate = do
     referenceChan <- newChan
     let com = ProcCom pv referenceChan
 
-    _ <- forkIO $ controllerBroker arduinoPort simulate com
+    _ <- forkIO $ mainLoop sock com
 
-    mainLoop sock com
+    controllerBroker arduinoPort simulate com
 
 
 mainLoop :: Socket -> ProcCom PVType -> IO ()
@@ -75,24 +82,80 @@ controllerBroker :: FilePath -> Bool -> ProcCom PVType -> IO ()
 controllerBroker arduinoPort simulate (ProcCom pvMVar refChan) = do
     refMVar <- newMVar 0
 
-    _ <- if simulate then
-            forkIO $ simulatorLoop refMVar pvMVar
-         else
-            forkIO $ controlLoop arduinoPort refMVar pvMVar
+    _ <- forkIO $ forever $ do
+            ref <- readChan refChan
+            swapMVar refMVar ref
 
-    forever $ do
-        ref <- readChan refChan
-        swapMVar refMVar ref
+    if simulate then
+        simulatorLoop refMVar pvMVar
+    else do
+        controlLoop arduinoPort refMVar pvMVar
+        port <- openSerial arduinoPort defaultSerialSettings { commSpeed = CS57600 }
+        _ <- send port $ B.pack [0xFF :: Word8]
+        closeSerial port
+
+    putStrLn "Shutting daemon down."
 
 
 controlLoop :: FilePath -> MVar PVType -> MVar PVType -> IO ()
-controlLoop _ refMVar pvMVar = forever $ do
-    -- connect to the arduino or exitFailure
-    ref <- readMVar refMVar
-    -- measure the PV here
-    _ <- swapMVar pvMVar ref
-    -- implement a controler here
-    threadDelay 1000000
+controlLoop arduinoPath refMVar pvMVar = withArduino False arduinoPath $ do
+        liftIO $ putStrLn "Daemon startup finished"
+        let sensor      = analog 0
+        let pwm_pin     = digital 3
+        let chip_enable = digital 2
+
+        setPinMode sensor ANALOG
+        setPinMode pwm_pin PWM
+        setPinMode chip_enable OUTPUT
+        digitalWrite chip_enable True
+
+        integralMVar <- liftIO $ newMVar 0
+
+        forever $ do
+            integral  <- liftIO $ takeMVar integralMVar
+            reference <- liftIO $ readMVar refMVar
+
+            sensorValue <- analogRead sensor
+            let fillHeight = sensorValueFunc sensorValue
+            _ <- liftIO $ swapMVar pvMVar fillHeight
+
+            let error = reference - fillHeight
+
+            let proportional_term = kp * error
+
+            let newIntegral = if proportional_term < maxOut &&
+                                 proportional_term > minOut then
+                                  (integral + error / fromIntegral sampleTime) * ki
+                              else
+                                  integral
+
+            let output = clampAndScaleOutput $ kp * error + newIntegral
+
+            liftIO $ putMVar integralMVar newIntegral
+
+            liftIO $ putStrLn ("Ref: " ++ show reference ++ " sensorValue: "
+                               ++ show sensorValue ++ " height: " ++ show fillHeight)
+
+            liftIO $ putStrLn ("Error: " ++ show error ++ " integral: " ++ show newIntegral)
+
+            analogWrite pwm_pin output
+            delay sampleTime
+        where
+                kp = 4
+                ki = 1
+                minOut = 3
+                maxOut = 12
+                sampleTime = 100
+                clampAndScaleOutput out
+                    | out <  1.5      = 0
+                    | out <  minOut   = 64
+                    | out >= maxOut   = 255
+                    | otherwise       = round $ (out / 12) * 255
+
+
+sensorValueFunc :: Int -> Double
+sensorValueFunc value = fromIntegral value * sensor_constant
+                            where sensor_constant = 0.0296
 
 
 simulatorLoop :: MVar PVType -> MVar PVType -> IO ()
@@ -121,7 +184,7 @@ runConn hdl com = do
             hClose hdl
         else do
             contents <- fmap C.pack (hGetLine hdl)
-            C.putStrLn contents
+--            C.putStrLn contents
             response <- mapM (handleMsg com) $ C.lines contents
             mapM_ (C.hPutStrLn hdl) response
             runConn hdl com

@@ -6,7 +6,7 @@ import Network.JsonRpc.Server
 import Control.Concurrent.MVar
 import Control.Concurrent.Chan
 import Control.Monad.Reader
-import Control.Monad.Error (throwError)
+import Control.Monad.Except (throwError)
 
 type PVType = Double
 
