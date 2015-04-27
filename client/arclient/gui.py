@@ -266,7 +266,7 @@ class CommandLine(urwid.Pile):
             self.set_status('Invalid command: ' + command)
 
 
-def quit_cmd(arguments):
+def quit_cmd(arguments=None, data=None):
     """Exit the program cleanly"""
 
     raise urwid.ExitMainLoop()
@@ -418,13 +418,25 @@ def main():
 
     def read_cb():
         data = sock_file.readline()
-        data = json.loads(data)
-        _, f = remote_cmds[data['id']]
-        f(data, loop, command_line, tank)
+
+        if data:
+            data = json.loads(data)
+            _, f = remote_cmds[data['id']]
+            f(data, loop, command_line, tank)
+
+        else:
+            command_line.set_status("Error: invalid data from server!" +
+            " Shutting down...")
+            loop.remove_watch_file(sock.fileno())
+
+            loop.set_alarm_in(5, quit_cmd)
 
     def periodic_tasks(loop, data):
         request , _ = lvl_cmd('update-tank', [])
-        sock.send(bytes(request, 'utf-8'))
+        try:
+            sock.send(bytes(request, 'utf-8'))
+        except BrokenPipeError as e:
+            pass
 
         tank.update()
 
