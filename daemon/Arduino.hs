@@ -28,10 +28,12 @@ controlLoop arduinoPath refMVar pvMVar = withArduino False arduinoPath $ do
     digitalWrite chip_enable True
 
     integralMVar <- liftIO $ newMVar 0
+    lastRefMvar  <- liftIO $ newMVar 0
 
     forever $ do
         integral  <- liftIO $ takeMVar integralMVar
         reference <- liftIO $ readMVar refMVar
+        lastRef   <- liftIO $ takeMVar lastRefMvar
 
         sensorValue <- analogRead sensor
         let fillHeight = sensorValueFunc sensorValue
@@ -45,14 +47,18 @@ controlLoop arduinoPath refMVar pvMVar = withArduino False arduinoPath $ do
         let piOut = proportional_term + integral_term
 
         let new_integral = if piOut > maxOut ||
-                               piOut < minOut then
-                                integral
+                                piOut < minOut then
+                                if lastRef == reference then
+                                    integral
+                                else
+                                    0
                             else
                                 integral_term
 
         let output = clampAndScaleOutput $ proportional_term + new_integral
 
         liftIO $ putMVar integralMVar new_integral
+        liftIO $ putMVar lastRefMvar reference
 
         liftIO $ debugM "Regulator" $ "Ref: " ++ show reference
                                       ++ " sensorValue: " ++ show sensorValue
