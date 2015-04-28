@@ -236,6 +236,7 @@ class CommandLine(urwid.Pile):
             'ctrl p' : hist_up,
             'up'     : hist_up,
             'down'   : hist_down,
+            'ctrl n' : hist_down,
             'ctrl u' : del_line,
             'ctrl w' : del_word,
             'ctrl j' : enter_handler,
