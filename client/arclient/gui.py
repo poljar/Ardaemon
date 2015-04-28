@@ -388,7 +388,7 @@ def parse_arguments():
                         help='port to use (Default 4040)')
     parser.add_argument('--host', type=str, default='localhost',
                         help='host to connect to (Default localhost)')
-    parser.add_argument('-n', '--interval', type=float, default=0.3,
+    parser.add_argument('--interval', type=float, default=0.3,
                         help='update interval')
 
     args = parser.parse_args()
