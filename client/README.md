@@ -8,6 +8,7 @@ Arclient is a TUI for Ardeamon.
 
 Arclient is packaged using standard pythons setup tools, you can install it as
 your user with:
+
     python setup.py install --user
 
 ## Usage
@@ -18,4 +19,5 @@ like keyboard shortcuts and tab completion. There are a couple of commands
 supported but the most important one is *set-reference*.
 
 See also:
+
     arclient --help
