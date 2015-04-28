@@ -11,5 +11,8 @@ executable ardaemon
   main-is:             Main.hs
   other-modules:       Commands Arduino
   other-extensions:    OverloadedStrings, RecordWildCards, DeriveDataTypeable
-  build-depends:       base >=4.7 && < 4.9, json-rpc-server >=0.1, mtl >=2.1, network >=2.6, cmdargs >=0.10, directory >=1.2, bytestring >=0.10,serialport >= 0.4.7, hArduino >= 0.9
+  build-depends:       base >=4.7 && < 4.9, json-rpc-server >=0.1, mtl >=2.1,
+                       hslogger >= 1.0, network >=2.6, cmdargs >=0.10,
+                       directory >=1.2, bytestring >=0.10,
+                       serialport >= 0.4.7, hArduino >= 0.9
   default-language:    Haskell2010

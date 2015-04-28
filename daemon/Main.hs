@@ -14,6 +14,7 @@ import Network
 import Network.JsonRpc.Server (call)
 
 import System.Exit
+import System.Log.Logger
 import System.Console.CmdArgs
 import System.Directory (doesFileExist)
 import System.IO (Handle, hGetLine, hIsEOF, hClose)
@@ -26,16 +27,20 @@ import Arduino
 
 
 data Options = Options {
-     port        :: Integer,
-     arduinoPort :: FilePath,
-     simulate    :: Bool
+     port            :: Integer,
+     arduinoPort     :: FilePath,
+     simulate        :: Bool,
+     debugRegulator  :: Bool,
+     verbose         :: Bool
      } deriving (Show, Data, Typeable)
 
 options :: Options
 options = Options {
-    port        = 4040            &= help "Listnening port",
-    arduinoPort = "/dev/ttyACM0"  &= help "Path to the arduino port",
-    simulate    = False           &= help "Simulate controller"
+    port           = 4040            &= help "Listnening port",
+    arduinoPort    = "/dev/ttyACM0"  &= help "Path to the arduino port",
+    simulate       = False           &= help "Simulate controller",
+    debugRegulator = False           &= help "Enable debugging info for the regulator",
+    verbose        = False           &= help "Output more"
     }
     &= summary "Arduino control daemon 0.1"
 
@@ -46,10 +51,20 @@ main = withSocketsDo $ do
 
     pathValid <- doesFileExist arduinoPort
 
+    if debugRegulator then
+        updateGlobalLogger "Regulator" (setLevel DEBUG)
+    else
+        updateGlobalLogger "Regulator" (setLevel NOTICE)
+
+    if verbose then
+        updateGlobalLogger rootLoggerName (setLevel DEBUG)
+    else
+        updateGlobalLogger rootLoggerName (setLevel NOTICE)
+
     if pathValid || simulate then
         startDaemon port arduinoPort simulate
     else do
-        putStrLn ("No such file: " ++ show arduinoPort)
+        errorM rootLoggerName $ "No such file: " ++ show arduinoPort
         exitFailure
 
 
@@ -68,8 +83,10 @@ startDaemon port arduinoPort simulate = do
 
 mainLoop :: Socket -> ProcCom PVType -> IO ()
 mainLoop sock com = do
-    (hdl, _, _) <- accept sock
-    _ <- forkIO $ runConn hdl com
+    (hdl, host, port) <- accept sock
+    let hostinfo = host ++ ":" ++ show port
+    noticeM rootLoggerName $ "Connected:    " ++ hostinfo
+    _ <- forkIO $ runConn hdl com hostinfo
 
     mainLoop sock com
 
@@ -88,19 +105,22 @@ controllerBroker arduinoPort simulate (ProcCom pvMVar refChan) = do
         controlLoop arduinoPort refMVar pvMVar
         shutDownArduino arduinoPort
 
-    putStrLn "Shutting daemon down."
+    noticeM rootLoggerName "Shutting daemon down."
 
 
 simulatorLoop :: MVar PVType -> MVar PVType -> IO ()
-simulatorLoop refMVar pvMVar = forever $ do
-    ref <- readMVar refMVar
-    curPV <- readMVar pvMVar
+simulatorLoop refMVar pvMVar = do
+    noticeM rootLoggerName "Daemon startup finished"
 
-    let newPV = curPV + (ref - curPV) * 0.1
+    forever $ do
+        ref <- readMVar refMVar
+        curPV <- readMVar pvMVar
 
-    _ <- swapMVar pvMVar newPV
+        let newPV = curPV + (ref - curPV) * 0.1
 
-    threadDelay 1000000
+        _ <- swapMVar pvMVar newPV
+
+        threadDelay 1000000
 
 
 handleMsg :: ProcCom PVType -> C.ByteString -> IO C.ByteString
@@ -109,15 +129,19 @@ handleMsg com msg = do
     return (fromMaybe "" response)
 
 
-runConn :: Handle -> ProcCom PVType -> IO ()
-runConn hdl com = do
-        isEof <- hIsEOF hdl
+runConn :: Handle -> ProcCom PVType -> String -> IO ()
+runConn hdl com hostinfo = do
+    isEof <- hIsEOF hdl
 
-        if isEof then
-            hClose hdl
-        else do
-            contents <- fmap C.pack (hGetLine hdl)
---            C.putStrLn contents
-            response <- mapM (handleMsg com) $ C.lines contents
-            mapM_ (C.hPutStrLn hdl) response
-            runConn hdl com
+    if isEof then do
+        hClose hdl
+        noticeM rootLoggerName $ "Disconnected: " ++ hostinfo
+    else do
+        contents <- hGetLine hdl
+        debugM rootLoggerName $ "RPC request : " ++ contents
+
+        response <- handleMsg com $ C.pack contents
+        debugM rootLoggerName $ "RPC response: " ++ C.unpack response
+
+        C.hPutStrLn hdl response
+        runConn hdl com hostinfo
