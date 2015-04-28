@@ -41,9 +41,13 @@ class TankWidget(urwid.Widget):
 
         water_height = math.floor((1 - self.fill) * max_y)
 
+        fill_text = "{:.2f}".format(self.fill * 18) + ' cm'
+        canvas.set_text((max_x + margin) / 2, water_height - 5, fill_text)
+
         # Sine wave of water level
-        [canvas.set(x/4, water_height + math.sin(math.radians(x + self.frame) * 12))
-            for x in range(margin * 4, max_x * 4 + margin * 4, 2)]
+        if water_height < (max_y - 1):
+            [canvas.set(x/4, water_height + math.sin(math.radians(x + self.frame) * 12))
+                for x in range(margin * 4, max_x * 4 + margin * 4, 2)]
 
 
     def draw_tank(self, s, size):
@@ -69,10 +73,10 @@ class TankWidget(urwid.Widget):
             for y in range(water_height + 2, max_y)]
 
     def set_fill_level(self, fill):
-        fill /= 21
-
-        if fill > 1.0 or fill < 0:
+        if fill > 17.5 or fill < 0:
             return
+
+        fill /= 18
 
         if fill != self.fill:
             self.fill = fill
