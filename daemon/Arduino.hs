@@ -84,7 +84,8 @@ controlLoop arduinoPath refMVar pvMVar = withArduino False arduinoPath $ do
 
 sensorValueFunc :: Int -> Double
 sensorValueFunc value = fromIntegral value * sensor_constant
-                            where sensor_constant | value < 80  = 0.0533
+                            where sensor_constant | value < 61  = 0
+                                                  | value < 80  = 0.0533
                                                   | value < 150 = 0.0431
                                                   | value < 200 = 0.0375
                                                   | value < 220 = 0.0341
