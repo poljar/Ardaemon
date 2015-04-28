@@ -9,6 +9,7 @@ import urwid
 import socket
 import asyncio
 import drawille
+import argparse
 
 
 class TankWidget(urwid.Widget):
@@ -377,6 +378,19 @@ def update_tank_clbk(data, loop, cmd, tank):
     tank.set_fill_level(level)
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', type=int, default=4040,
+                        help='port to use (Default 4040)')
+    parser.add_argument('--host', type=str, default='localhost',
+                        help='host to connect to (Default localhost)')
+    parser.add_argument('-n', '--interval', type=float, default=0.3,
+                        help='update interval')
+
+    args = parser.parse_args()
+
+    return args
+
 def main():
     palette = [
             ('', 'default,bold', 'default', 'bold'),
@@ -396,23 +410,23 @@ def main():
             'update-tank'   : (lvl_cmd, update_tank_clbk),
     }
 
+    args = parse_arguments()
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
-        sock.connect(('localhost', 4040))
+        sock.connect((args.host, args.port))
     except Exception as e:
         print('Error connecting: ' + str(e))
         return
+
     sock_file = sock.makefile('r')
 
-    command_line = CommandLine(cmd_list, remote_cmds, sock)
-
     tank = TankWidget()
-
+    command_line = CommandLine(cmd_list, remote_cmds, sock)
     top = urwid.Frame(tank, None, command_line, 'footer')
 
     evl = urwid.AsyncioEventLoop(loop=asyncio.get_event_loop())
-
     loop = urwid.MainLoop(top, palette, event_loop=evl)
 
     command_line.set_loop(loop)
@@ -441,11 +455,10 @@ def main():
 
         tank.update()
 
-        loop.set_alarm_in(0.3, periodic_tasks)
+        loop.set_alarm_in(args.interval, periodic_tasks)
 
     loop.watch_file(sock.fileno(), read_cb)
-
-    loop.set_alarm_in(0.3, periodic_tasks)
+    loop.set_alarm_in(0.1, periodic_tasks)
 
     loop.run()
 
