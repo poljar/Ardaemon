@@ -37,7 +37,7 @@ getLevel = toMethod "get-level" f ()
 
 referenceIsValid :: PVType -> Bool
 referenceIsValid ref
-    | ref > 20   = False
+    | ref > 17.5 = False
     | ref < 0    = False
     | otherwise  = True
 
@@ -52,4 +52,4 @@ setReference = toMethod "set-reference" f (Required "reference" :+: ())
 
                 refChan <- asks referenceChan
                 liftIO $ writeChan refChan ref
-          invalidReference = rpcError (-32000) "Reference out of range (0-20cm)!"
+          invalidReference = rpcError (-32000) "Reference out of range (0-17.5cm)!"
