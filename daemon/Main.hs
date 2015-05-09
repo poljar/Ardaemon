@@ -11,6 +11,7 @@ import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans (liftIO)
 
 import Network
+import Network.Socket (listen, bindSocket, socket, Family(..), SocketType(..), SockAddr(..), iNADDR_ANY)
 import Network.JsonRpc.Server (call)
 
 import System.Exit
@@ -70,7 +71,10 @@ main = withSocketsDo $ do
 
 startDaemon :: Integer -> FilePath -> Bool -> IO ()
 startDaemon port arduinoPort simulate = do
-    sock <- listenOn $ PortNumber $ fromInteger port
+    sock <- socket AF_INET Stream 0
+
+    bindSocket sock $ SockAddrInet (fromInteger port) iNADDR_ANY
+    listen sock 50
 
     pv <- newMVar 0
     referenceChan <- newChan
