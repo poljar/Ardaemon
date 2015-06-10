@@ -1,0 +1,303 @@
+\newpage
+\chapter{Pregled korištenih programskih jezika i idioma}
+
+U ovom poglavlju je detaljno opisan dings... bums...
+
+\section{Haskell}
+
+Haskell je funncionalni programski jezik koji
+
+\begin{itemize}
+\item static typed
+\item type safety
+\item laziness
+\end{itemize}
+
+% TODO
+\subsection{Networking}
+
+Socket lib.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[every node/.style = {font=\bf, rectangle, rounded corners,
+                    minimum width=70},
+                    connection/.style = {-Latex, Peach, line width=2}]
+    \node[draw=OliveGreen, fill=OliveGreen]
+          (socket) {\textcolor{white}{socket()}};
+
+    \node[draw=MidnightBlue, fill=MidnightBlue, right=of socket]
+          (bind) {\textcolor{white}{bind()}};
+
+    \node[draw=Sepia, fill=Sepia, right=of bind]
+          (listen) {\textcolor{white}{listen()}};
+
+    \node[draw=DarkOrchid, fill=DarkOrchid, right=of listen]
+          (accept) {\textcolor{white}{accept()}};
+
+    \draw[connection] (socket) to (bind);
+    \draw[connection] (bind)   to (listen);
+    \draw[connection] (listen) to (accept);
+\end{tikzpicture}
+\caption{Dings kak se server napravi}
+\end{figure}
+
+\mint{haskell}|socket :: Family -> SocketType -> ProtocolNumber -> IO Socket|
+
+\mint{haskell}|bind :: Socket -> SockAddr -> IO ()|
+
+\mint{haskell}|listen :: Socket -> Int -> IO ()|
+
+\mint{haskell}|socketToHandle :: Socket -> IOMode -> IO Handle|
+
+
+
+\newpage
+\subsection{Istodobnost}
+
+Istodobnost (engl. \emph{Concurrency}) je svojstvo sustava s kojim se istodobno
+mogu izvršavati više računskih operacija ili komputacija.
+
+% TODO add ref to 'Concurrent Haskell paper'
+
+Istodobnost u Haskell-u je uglavnom izveden pomoću 'Zelenih niti"
+(engl.\emph{Green threads}). Zelene niti se ne izvršavaju u kernel-u već u
+\emph{Haskell runtime-u}. Haskell ima hibridni \emph{threading} model s kojim se
+N Haskell niti mogu vezivati na M \emph{kernel} niti.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+    \node[draw=OliveGreen, rectangle, minimum width=400, minimum height=100,
+    label={[label distance=-90, font=\Large\bf, color=white]-90:Haskell threads},
+    fill=OliveGreen, rounded corners]
+    (hThreads) {};
+
+    \node[draw=LimeGreen, rectangle, rounded corners,
+          fill=LimeGreen, left=-3.5 of hThreads, font=\bf]
+          (hThread1) {\textcolor{white}{Thread 1}};
+
+    \foreach [count=\j from 1] \i in {2,...,4} {
+        \node[draw=LimeGreen, rectangle, rounded corners,
+              fill=LimeGreen, font=\bf, right=of hThread\j]
+              (hThread\i) {\textcolor{white}{Thread \i}};
+    }
+
+    \node[draw=MidnightBlue, rectangle, rounded corners, minimum width=400,
+          minimum height=100, below=of hThreads, label={[label distance=-90,
+          font=\Large\bf, color=white]90:OS threads}, fill=MidnightBlue]
+          (osThreads) {};
+
+    \node[draw=NavyBlue, fill=NavyBlue, rectangle, rounded corners,
+          left=-5.0 of osThreads, font=\bf] (osThread1)
+          {\textcolor{white}{Thread 1}};
+
+    \foreach [count=\j from 1] \i in {2,...,3} {
+        \node[draw=NavyBlue, fill=NavyBlue, font=\bf, rectangle,
+              rounded corners, right=of osThread\j]
+              (osThread\i) {\textcolor{white}{Thread \i}};
+    }
+
+    \draw[line width=2, color=Peach] (hThread1) to (osThread1);
+    \draw[line width=2, color=Peach] (hThread2) to (osThread1);
+    \draw[line width=2, color=Peach] (hThread3) to (osThread2);
+    \draw[line width=2, color=Peach] (hThread4) to (osThread3);
+\end{tikzpicture}
+\caption{N:M višenitni model Haskell-a}
+\label{fig:thread_model}
+\end{figure}
+
+Interno se u Haskell-u stvaranje nove niti pretvara u alokaciju strukture koja
+sprema trenutno stanje niti te se niti pretvaraju u jednu petlju.
+
+Za stvaranje nove niti Haskell nudi \mintinline{haskell}{forkIO} funkciju čiji
+je tip definiran kao:
+\mint{haskell}|forkIO :: IO () -> IO ThreadId|
+
+Što znači da funkcija prima kao prvi argument komputaciju (engl.
+\emph{computation}) i vraća kao rezultat \emph{ThreadId} što nam služi kao
+referenca na novu nit koju će funkcija stvoriti.
+
+Osim niti za istodobno izvršavanje programa bitna je i komunikacija između niti.
+Za komunikaciju izmedu niti Haskell nudi mutabilne dijeljene varijable zvane
+MVar (Mutabel Variables). One se mogu koristiti na razne načine:
+
+\begin{itemize}
+\item Sinkronizirane mutabilne varijable.
+\item Komunikacijski kanali između niti.
+\item Binarni semafori.
+\end{itemize}
+
+Mvar:
+\mint{haskell}|newMVar :: a -> IO (MVar a)|
+
+
+% TODO
+\newpage
+\section{Python}
+\subsection{Event loop}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.9]
+\newcommand{\arcarrow}[8]% inner radius, middle radius, outer radius, start angle, end angle, tip protusion angle, options, text
+{   \pgfmathsetmacro{\rin}{#1}
+    \pgfmathsetmacro{\rmid}{#2}
+    \pgfmathsetmacro{\rout}{#3}
+    \pgfmathsetmacro{\astart}{#4}
+    \pgfmathsetmacro{\aend}{#5}
+    \pgfmathsetmacro{\atip}{#6}
+    \fill[#7] (\astart:\rin) arc (\astart:\aend:\rin) -- (\aend+\atip:\rmid) -- (\aend:\rout) arc (\aend:\astart:\rout) -- (\astart+\atip:\rmid) -- cycle;
+    \path[decoration={text along path, text={|\color{white}\bf|#8}, text align={align=center}, raise=-0.5ex},decorate] (\astart+\atip:\rmid) arc (\astart+\atip:\aend+\atip:\rmid);
+}
+
+    \fill[even odd rule,NavyBlue] circle (4.8) circle (4.2);
+    \draw (0, 0) node {\huge \bf Event Loop};
+
+    \arcarrow {4}{4.5}{5}{325+20}{325+100}{5} {fill=MidnightBlue,
+                draw=MidnightBlue, very thick} {Calculate poll timeout};
+    \arcarrow {4}{4.5}{5}{85+20}{85+100}{5} {fill=MidnightBlue,
+                draw=MidnightBlue, very thick} {Poll};
+    \arcarrow {4}{4.5}{5}{205+20}{205+100}{5} {fill=MidnightBlue,
+                draw=MidnightBlue, very thick} {Run callbacks};
+
+\end{tikzpicture}
+\caption{Event loop schematic}
+\end{figure}
+
+\subsection{Urwid}
+
+\subsection{Python Networking}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[every node/.style = {font=\bf, rectangle, rounded corners,
+                    minimum width=70},
+                    connection/.style = {-Latex, Peach, line width=2}]
+    \node[draw=OliveGreen, fill=OliveGreen]
+          (socket) {\textcolor{white}{socket()}};
+
+    \node[draw=DarkOrchid, fill=DarkOrchid, right=of socket]
+          (connect) {\textcolor{white}{connect()}};
+
+    \draw[connection] (socket) to (connect);
+\end{tikzpicture}
+\caption{Dings kak se client napravi}
+\end{figure}
+
+\newpage
+\section{Firmata}
+
+\begin{table}[h]
+\centering
+    \begin{tabular}{|c|c|}
+        \hline
+        Naredba               & Command? \\
+        \hline
+        analog I/O message    & 0xE0 \\
+        \hline
+        digital I/O message   & 0x90 \\
+        \hline
+        report analog pin     & 0xC0 \\
+        \hline
+        report digital port   & 0xD0 \\
+        \hline
+        start sysex           & 0xF0 \\
+        \hline
+        set pin mode(I/O)     & 0xF4 \\
+        \hline
+        set digital pin value & 0xF5 \\
+        \hline
+        sysex end             & 0xF7 \\
+        \hline
+        protocol version      & 0xF9 \\
+        \hline
+        system reset          & 0xFF \\
+        \hline
+    \end{tabular}
+    \caption{Tablica}
+\end{table}
+
+
+\newpage
+\section{Matematički model postrojenja}
+
+\begin{equation} \frac{dV}{dt} = q_{in} - q_{out} \end{equation}
+
+\begin{equation} q_{out} = a \sqrt{2gh} \end{equation}
+
+\begin{equation} q_{in} = k_p V \end{equation}
+
+\begin{equation} A\frac{dh}{dt} = k_p V - a \sqrt{2gh} \end{equation}
+
+\begin{equation} \frac{d\delta h}{dt} = \frac{k_p}{A} \delta V -
+                 \frac{a \sqrt{2g}}{2 A \sqrt{h_0}} \delta h \end{equation}
+
+\begin{equation} \frac{d\delta h}{dt} = k_1 \delta V
+                 - k_2 \delta h \end{equation}
+
+\begin{equation} s H(s) = k_1 V(s) - k_2 H(s) \end{equation}
+
+\begin{equation} H(s)(s+k_2) = k_1 V(s) \end{equation}
+
+\begin{equation} G(s) = \frac{H(s)}{V(s)} = \frac{k_1}{s+k_2} \end{equation}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[every node/.style = {font = \footnotesize}]
+    \tikzset{weird fill/.style={append after command={
+    \pgfextra
+        \draw [#1, sharp corners, fill=#1]%
+        (\tikzlastnode.west)%
+        [rounded corners=0] |- (\tikzlastnode.north)%
+        [rounded corners=3] -| (\tikzlastnode.east)%
+        [rounded corners=0] |- (\tikzlastnode.south)%
+        [rounded corners=0] -| (\tikzlastnode.west);
+        \endpgfextra}}}
+
+    \draw [rounded corners=3] (-5,10) -- (-2,10) -- (-2,9);
+    \draw [rounded corners=3] (-5,10.5) -- (-1.5,10.5) -- (-1.5,9);
+    \draw (-1.75, 9) circle [x radius=0.25, y radius=0.05];
+    \draw (-4, 10.25) node [font=\normalsize] {$q_{in}$};
+    \draw [-Latex, thick] (-3.5, 10.25) -- (-2.5, 10.25);
+
+    \draw (0, 2.5) node[rectangle, minimum width=228, minimum height=140,
+    fill=NavyBlue] {};
+
+    \draw [fill=NavyBlue] (0,0) circle [x radius=4, y radius=0.5];
+    \draw [fill=NavyBlue, thick, dashed] (0,5) circle [x radius=4, y radius=0.5];
+
+    \node [font=\large] (area) {\textcolor{white}{A}};
+    \node [font=\large, above=4.4 of area] {\textcolor{white}{V}};
+
+    \draw (4,9)  arc[x radius = 4, y radius = 0.5, start angle=0, end angle=112];
+    \draw (4,9)  arc[x radius = 4, y radius = 0.5, start angle=0, end angle=-240];
+
+    \draw (-4,0)  -- (-4,9);
+    \draw (4,0)   -- (4,0.5);
+    \draw (4,1.2) -- (4,9);
+
+    \draw (4.9, 0.85)
+    node[weird fill=NavyBlue, rectangle, minimum width=62, minimum height=19]
+    (qout1) {};
+    \draw (4.5, 0.85) node [font=\normalsize] {\textcolor{white}{$q_{out}$}};
+
+    \node [below right=-0.1 and -0.7 of qout1, fill=NavyBlue, minimum width=20, minimum
+    height=17] (qout2) {};
+
+    \draw [NavyBlue, fill=NavyBlue] (5.2, 0.6) -- (5.2,0.7) -- (5.5,0.7) -- (5.30, 0.4);
+    \draw [NavyBlue, fill=NavyBlue] (5.2, 0.6) -- (5.2,0.5) -- (5.5,0.49);
+    \draw [rounded corners=3] (4,1.2) -- (6,1.2) -- (6,0);
+    \draw [rounded corners=3] (4,0.5) -- (5.3,0.5) -- (5.3,0);
+
+    \draw [fill=NavyBlue] (5.65,0) circle [x radius=0.35, y radius=0.05];
+
+    \draw (-4, 0) -- (-4.5, 0);
+    \draw (-4, 5) -- (-4.5, 5);
+    \draw [Latex-Latex] (-4.5, 0) -- (-4.5, 5);
+    \draw (-4.7, 2.5) node [font=\large] {h};
+
+\end{tikzpicture}
+\caption{Šematski model postrojenja}
+\end{figure}
+

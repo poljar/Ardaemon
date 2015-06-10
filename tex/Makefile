@@ -1,7 +1,7 @@
 filename=main
 
 pdf:
-	xelatex ${filename}
+	xelatex -shell-escape -save-size=10000 ${filename}
 
 read: pdf
 	zathura ${filename}.pdf &

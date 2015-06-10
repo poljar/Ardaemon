@@ -1,0 +1,215 @@
+\newpage
+\chapter{Implementation}
+
+U ovom poglavlju je objašnjena implementacija socket servera, odgovarajućeg
+klijenta i na kraju samog postrojenja.
+
+\newpage
+\section{Server}
+
+Arhitektura servera.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[every node/.style = {font=\bf},
+                    connection/.style = {Latex-Latex, Peach, line width=2}]
+    \node[draw=OliveGreen,rectangle, rounded corners,
+          fill=OliveGreen, minimum size=100]
+          (regulator) {\textcolor{white}{Regulacijska nit}};
+
+    \node[draw=MidnightBlue, rectangle, rounded corners, minimum size=100,
+          right=2cm of regulator, fill=MidnightBlue]
+          (server) {\textcolor{white}{Posrednička nit}};
+
+    \node[draw=NavyBlue, rectangle, rounded corners,
+          minimum size=60, below left=2cm and -2.3cm of server,
+          fill=NavyBlue]
+          (clientA) {\textcolor{white}{Klijentska nit A}};
+
+    \node[draw=NavyBlue, rectangle, rounded corners,
+          minimum size=60, right=of clientA,
+          fill=NavyBlue]
+          (clientB) {\textcolor{white}{Klijentska nit B}};
+
+    \draw[connection] (regulator) to (server);
+    \draw[connection] (server)    to (clientA);
+    \draw[connection] (server)    to (clientB);
+\end{tikzpicture}
+\caption{Arhitektura servera}
+\label{fig:architecture}
+\end{figure}
+
+Na slici~\ref{fig:architecture} je prikazana komunikacija između pojedinih niti
+unutar servera. Niti komuniciraju pomoću djeljenih varijabli.
+... je dobro.
+
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{haskell}
+startDaemon :: Integer -> FilePath -> Bool -> IO ()
+startDaemon port arduinoPort simulate = do
+    sock <- socket AF_INET Stream 0
+
+    bindSocket sock $ SockAddrInet (fromInteger port) iNADDR_ANY
+    listen sock 50
+
+    pv <- newMVar 0
+    referenceChan <- newChan
+    let com = ProcCom pv referenceChan
+
+    _ <- forkIO $ mainLoop sock com
+
+    controllerBroker arduinoPort simulate com
+\end{minted}
+\caption{Main entry point}
+\label{lst:main}
+\end{listing}
+
+Na ispisu koda \ref{lst:main} je.
+
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{haskell}
+mainLoop :: Socket -> ProcCom PVType -> IO ()
+mainLoop sock com = do
+    (hdl, host, port) <- accept sock
+    let hostinfo = host ++ ":" ++ show port
+    noticeM rootLoggerName $ "Connected:    " ++ hostinfo
+    _ <- forkIO $ runConn hdl com hostinfo
+
+    mainLoop sock com
+\end{minted}
+\caption{Server mainloop}
+\label{lst:mainloop}
+\end{listing}
+
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{haskell}
+runConn :: Handle -> ProcCom PVType -> String -> IO ()
+runConn hdl com hostinfo = do
+    isEof <- hIsEOF hdl
+
+    if isEof then do
+        hClose hdl
+        noticeM rootLoggerName $ "Disconnected: " ++ hostinfo
+    else do
+        contents <- hGetLine hdl
+        debugM rootLoggerName $ "RPC request : " ++ contents
+
+        response <- handleMsg com $ C.pack contents
+        debugM rootLoggerName $ "RPC response: " ++ C.unpack response
+
+        C.hPutStrLn hdl response
+\end{minted}
+\caption{Client handler thread}
+\label{lst:client handler}
+\end{listing}
+
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{haskell}
+controllerBroker :: FilePath -> Bool -> ProcCom PVType -> IO ()
+controllerBroker arduinoPort simulate (ProcCom pvMVar refChan) = do
+    refMVar <- newMVar 0
+
+    _ <- forkIO $ forever $ do
+            ref <- readChan refChan
+            swapMVar refMVar ref
+
+    if simulate then
+        simulatorLoop refMVar pvMVar
+    else do
+        controlLoop arduinoPort refMVar pvMVar
+        shutDownArduino arduinoPort
+
+    noticeM rootLoggerName "Shutting daemon down."
+\end{minted}
+\caption{Controler broker}
+\label{lst:controler broker}
+\end{listing}
+
+
+\newpage
+\section{Client}
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{python}
+def main():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((args.host, args.port))
+
+    tank = TankWidget()
+    command_line = CommandLine(cmd_list, remote_cmds, sock)
+    top = urwid.Frame(tank, None, command_line, 'footer')
+
+    evl = urwid.AsyncioEventLoop(loop=asyncio.get_event_loop())
+    loop = urwid.MainLoop(top, palette, event_loop=evl)
+
+    loop.watch_file(sock.fileno(), read_cb)
+    loop.set_alarm_in(0.1, periodic_tasks)
+
+    loop.run()
+\end{minted}
+\caption{Client main loop}
+\label{lst:client main}
+\end{listing}
+
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{python}
+    def periodic_tasks(loop, data):
+        request , _ = lvl_cmd('update-tank', [])
+        try:
+            sock.send(bytes(request, 'utf-8'))
+        except BrokenPipeError as e:
+            pass
+
+        tank.update()
+
+        loop.set_alarm_in(args.interval, periodic_tasks)
+
+    loop.watch_file(sock.fileno(), read_cb)
+\end{minted}
+\caption{Periodic update dings}
+\label{lst:periodic tasks}
+\end{listing}
+
+
+\newpage
+\section{Regulator}
+
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{haskell}
+forever $ do
+    integral  <- liftIO $ takeMVar integralMVar
+    reference <- liftIO $ readMVar refMVar
+
+    sensorValue <- analogRead sensor
+    let fillHeight = sensorValueFunc sensorValue
+    _ <- liftIO $ swapMVar pvMVar fillHeight
+
+    let error = reference - fillHeight
+
+    let proportional_term = kp * error
+    let integral_term     = integral + ki * error / sampleTime
+
+    let output = clampAndScaleOutput $ proportional_term + integral_term
+
+    analogWrite pwm_pin output
+    delay sampleTime
+\end{minted}
+\caption{Regulacijska petlja}
+\label{lst:regulator}
+\end{listing}
+
+
+\newpage
+\section{Postrojenje}
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.80]{figures/shield_schematic.pdf}
+\caption{Električna šema postrojenja}
+\end{figure}
