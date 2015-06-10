@@ -10,15 +10,14 @@ import Control.Monad.Reader (forever, runReaderT)
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans (liftIO)
 
-import Network
-import Network.Socket (listen, bindSocket, socket, Family(..), SocketType(..), SockAddr(..), iNADDR_ANY)
+import Network.Socket
 import Network.JsonRpc.Server (call)
 
 import System.Exit
 import System.Log.Logger
 import System.Console.CmdArgs
 import System.Directory (doesFileExist)
-import System.IO (Handle, hGetLine, hIsEOF, hClose)
+import System.IO (Handle, hGetLine, hIsEOF, hClose, IOMode(..))
 
 import qualified Data.ByteString.Lazy.Char8 as C
 
@@ -47,7 +46,7 @@ options = Options {
 
 
 main :: IO ()
-main = withSocketsDo $ do
+main = do
     Options {..} <- cmdArgs options
 
     pathValid <- doesFileExist arduinoPort
@@ -71,7 +70,7 @@ main = withSocketsDo $ do
 
 startDaemon :: Integer -> FilePath -> Bool -> IO ()
 startDaemon port arduinoPort simulate = do
-    sock <- socket AF_INET Stream 0
+    sock <- socket AF_INET Stream defaultProtocol
 
     bindSocket sock $ SockAddrInet (fromInteger port) iNADDR_ANY
     listen sock 50
@@ -87,9 +86,10 @@ startDaemon port arduinoPort simulate = do
 
 mainLoop :: Socket -> ProcCom PVType -> IO ()
 mainLoop sock com = do
-    (hdl, host, port) <- accept sock
-    let hostinfo = host ++ ":" ++ show port
+    (s, host) <- accept sock
+    let hostinfo = show host
     noticeM rootLoggerName $ "Connected:    " ++ hostinfo
+    hdl <- socketToHandle s ReadWriteMode
     _ <- forkIO $ runConn hdl com hostinfo
 
     mainLoop sock com
