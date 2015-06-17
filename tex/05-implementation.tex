@@ -9,7 +9,7 @@ klijenta i na kraju samog postrojenja.
 
 Arhitektura servera.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[every node/.style = {font=\bf},
                     connection/.style = {Latex-Latex, Peach, line width=2}]
@@ -39,7 +39,7 @@ Arhitektura servera.
 \label{fig:architecture}
 \end{figure}
 
-Na slici~\ref{fig:architecture} je prikazana komunikacija između pojedinih niti
+Na slici \ref{fig:architecture} je prikazana komunikacija između pojedinih niti
 unutar servera. Niti komuniciraju pomoću djeljenih varijabli.
 ... je dobro.
 
@@ -129,6 +129,32 @@ controllerBroker arduinoPort simulate (ProcCom pvMVar refChan) = do
 \label{lst:controler broker}
 \end{listing}
 
+\subsection{Regulator}
+
+\begin{listing}[H]
+\centering
+\begin{minted}[frame=single]{haskell}
+forever $ do
+    integral  <- liftIO $ takeMVar integralMVar
+    reference <- liftIO $ readMVar refMVar
+
+    sensorValue <- analogRead sensor
+    let fillHeight = sensorValueFunc sensorValue
+    _ <- liftIO $ swapMVar pvMVar fillHeight
+
+    let error = reference - fillHeight
+
+    let proportional_term = kp * error
+    let integral_term     = integral + ki * error / sampleTime
+
+    let output = clampAndScaleOutput $ proportional_term + integral_term
+
+    analogWrite pwm_pin output
+    delay sampleTime
+\end{minted}
+\caption{Regulacijska petlja}
+\label{lst:regulator}
+\end{listing}
 
 \newpage
 \section{Client}
@@ -177,39 +203,93 @@ def main():
 
 
 \newpage
-\section{Regulator}
-
-\begin{listing}[H]
-\centering
-\begin{minted}[frame=single]{haskell}
-forever $ do
-    integral  <- liftIO $ takeMVar integralMVar
-    reference <- liftIO $ readMVar refMVar
-
-    sensorValue <- analogRead sensor
-    let fillHeight = sensorValueFunc sensorValue
-    _ <- liftIO $ swapMVar pvMVar fillHeight
-
-    let error = reference - fillHeight
-
-    let proportional_term = kp * error
-    let integral_term     = integral + ki * error / sampleTime
-
-    let output = clampAndScaleOutput $ proportional_term + integral_term
-
-    analogWrite pwm_pin output
-    delay sampleTime
-\end{minted}
-\caption{Regulacijska petlja}
-\label{lst:regulator}
-\end{listing}
-
-
 \newpage
 \section{Postrojenje}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[scale=0.80]{figures/shield_schematic.pdf}
-\caption{Električna šema postrojenja}
+\caption{Električna shema postrojenja}
+\end{figure}
+
+\newpage
+\subsection{Matematički model postrojenja}
+
+\begin{equation} \frac{dV}{dt} = q_{in} - q_{out} \end{equation}
+
+\begin{equation} q_{out} = a \sqrt{2gh} \end{equation}
+
+\begin{equation} q_{in} = k_p V \end{equation}
+
+\begin{equation} A\frac{dh}{dt} = k_p V - a \sqrt{2gh} \end{equation}
+
+\begin{equation} \frac{d\delta h}{dt} = \frac{k_p}{A} \delta V -
+                 \frac{a \sqrt{2g}}{2 A \sqrt{h_0}} \delta h \end{equation}
+
+\begin{equation} \frac{d\delta h}{dt} = k_1 \delta V
+                 - k_2 \delta h \end{equation}
+
+\begin{equation} s H(s) = k_1 V(s) - k_2 H(s) \end{equation}
+
+\begin{equation} H(s)(s+k_2) = k_1 V(s) \end{equation}
+
+\begin{equation} G(s) = \frac{H(s)}{V(s)} = \frac{k_1}{s+k_2} \end{equation}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[every node/.style = {font = \footnotesize}]
+    \tikzset{weird fill/.style={append after command={
+    \pgfextra
+        \draw [#1, sharp corners, fill=#1]%
+        (\tikzlastnode.west)%
+        [rounded corners=0] |- (\tikzlastnode.north)%
+        [rounded corners=3] -| (\tikzlastnode.east)%
+        [rounded corners=0] |- (\tikzlastnode.south)%
+        [rounded corners=0] -| (\tikzlastnode.west);
+        \endpgfextra}}}
+
+    \draw [rounded corners=3] (-5,10) -- (-2,10) -- (-2,9);
+    \draw [rounded corners=3] (-5,10.5) -- (-1.5,10.5) -- (-1.5,9);
+    \draw (-1.75, 9) circle [x radius=0.25, y radius=0.05];
+    \draw (-4, 10.25) node [font=\normalsize] {$q_{in}$};
+    \draw [-Latex, thick] (-3.5, 10.25) -- (-2.5, 10.25);
+
+    \draw (0, 2.5) node[rectangle, minimum width=228, minimum height=140,
+    fill=NavyBlue] {};
+
+    \draw [fill=NavyBlue] (0,0) circle [x radius=4, y radius=0.5];
+    \draw [fill=NavyBlue, thick, dashed] (0,5) circle [x radius=4, y radius=0.5];
+
+    \node [font=\large] (area) {\textcolor{white}{A}};
+    \node [font=\large, above=4.4 of area] {\textcolor{white}{V}};
+
+    \draw (4,9)  arc[x radius = 4, y radius = 0.5, start angle=0, end angle=112];
+    \draw (4,9)  arc[x radius = 4, y radius = 0.5, start angle=0, end angle=-240];
+
+    \draw (-4,0)  -- (-4,9);
+    \draw (4,0)   -- (4,0.5);
+    \draw (4,1.2) -- (4,9);
+
+    \draw (4.9, 0.85)
+    node[weird fill=NavyBlue, rectangle, minimum width=62, minimum height=19]
+    (qout1) {};
+    \draw (4.5, 0.85) node [font=\normalsize] {\textcolor{white}{$q_{out}$}};
+
+    \node [below right=-0.1 and -0.7 of qout1, fill=NavyBlue, minimum width=20, minimum
+    height=17] (qout2) {};
+
+    \draw [NavyBlue, fill=NavyBlue] (5.2, 0.6) -- (5.2,0.7) -- (5.5,0.7) -- (5.30, 0.4);
+    \draw [NavyBlue, fill=NavyBlue] (5.2, 0.6) -- (5.2,0.5) -- (5.5,0.49);
+    \draw [rounded corners=3] (4,1.2) -- (6,1.2) -- (6,0);
+    \draw [rounded corners=3] (4,0.5) -- (5.3,0.5) -- (5.3,0);
+
+    \draw [fill=NavyBlue] (5.65,0) circle [x radius=0.35, y radius=0.05];
+
+    \draw (-4, 0) -- (-4.5, 0);
+    \draw (-4, 5) -- (-4.5, 5);
+    \draw [Latex-Latex] (-4.5, 0) -- (-4.5, 5);
+    \draw (-4.7, 2.5) node [font=\large] {h};
+
+\end{tikzpicture}
+\caption{Shematski model postrojenja}
 \end{figure}

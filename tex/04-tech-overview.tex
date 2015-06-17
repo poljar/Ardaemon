@@ -1,24 +1,121 @@
 \newpage
 \chapter{Pregled korištenih programskih jezika i idioma}
 
-U ovom poglavlju je detaljno opisan dings... bums...
+U ovom su poglavlju detaljno opisani programski jezici, tehnike i komunikacijski
+protokoli koji su korištene pri izradi diplomskoga rada.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+    \node[draw=OliveGreen, rectangle, minimum width=120, minimum height=200,
+    label={[label distance=-180, font=\Large\bf, color=white]-90:Plant},
+    fill=OliveGreen, rounded corners]
+    (plant) {};
+
+    \node[draw=MidnightBlue, rectangle, minimum width=120, minimum height=200,
+    label={[label distance=-180, font=\Large\bf, color=white]-90:Server},
+    fill=MidnightBlue, rounded corners, right=1.5 of plant]
+    (daemon) {};
+
+    \node[draw=DarkOrchid, rectangle, minimum width=120, minimum height=200,
+    label={[label distance=-180, font=\Large\bf, color=white]-90:Client},
+    fill=DarkOrchid, rounded corners, right=1.5 of daemon]
+    (client) {};
+
+    \node[draw=LimeGreen, rectangle, rounded corners, minimum height=40,
+          minimum width=100, fill=LimeGreen, below=-5 of plant, font=\bf]
+          (arduino) {\textcolor{white}{Microcontroller}};
+
+    \node[draw=LimeGreen, rectangle, rounded corners, minimum height=40,
+          minimum width=100, fill=LimeGreen, below=1.5 of arduino, font=\bf]
+          (process) {\textcolor{white}{Process}};
+
+    \node[draw=NavyBlue, rectangle, rounded corners, minimum height=40,
+          minimum width=100, fill=NavyBlue, below=-5 of daemon, font=\bf]
+          (regulator) {\textcolor{white}{Regulator}};
+
+    \node[draw=NavyBlue, rectangle, rounded corners, minimum height=40,
+          minimum width=100, fill=NavyBlue, below=1.5 of regulator, font=\bf]
+          (sserver) {\textcolor{white}{Socket Server}};
+
+    \node[draw=Thistle, rectangle, rounded corners, minimum height=40,
+          minimum width=100, fill=Thistle, below=-5 of client, font=\bf]
+          (UI) {\textcolor{white}{UI}};
+
+    \node[draw=Thistle, rectangle, rounded corners, minimum height=40,
+          minimum width=100, fill=Thistle, below=1.5 of UI, font=\bf]
+          (sclient) {\textcolor{white}{Socket Client}};
+
+    \draw[Latex-Latex, line width=2, color=Peach] (arduino) to (regulator);
+    \draw[Latex-Latex, line width=2, color=Peach] (arduino) to (process);
+    \draw[Latex-Latex, line width=2, color=Peach] (arduino) to (process);
+    \draw[Latex-Latex, line width=2, color=Peach] (sserver) to (sclient);
+    \draw[Latex-Latex, line width=2, color=Peach] (regulator) to (sserver);
+    \draw[Latex-Latex, line width=2, color=Peach] (UI) to (sclient);
+\end{tikzpicture}
+\caption{Shematski prikaz rada}
+\label{fig:main_sheme}
+\end{figure}
+
+Na slici \ref{fig:main_sheme} se vidi sinopsis diplomskoga rada koji je podijeljen u 3 dijela:
+\begin{itemize}
+        \item Postrojenje
+        \item Server
+        \item Klijent
+\end{itemize}
+
+Kao što je već spomenuto u poglavlju \ref{introduction} postrojenje sastoji se
+od mikroupravljača i dviju boca koje služe kao model za održavanje razine vode.
+
+Server koji je pisan u Haskell-u također se sastoji od dva dijela, regulatora i
+socket server-a. Regulacijski dio s postrojenjem komunicira pomoću Firmata
+protokola, a socket server s klijentima komunicira pomoću JSON-RPC protokola.
+
+Klijent koji je pisan u Python-u sastoji se od korisničkog sučelja i socket
+klijenta koji periodički dohvaća trenutno stanje postrojenja od servera.
 
 \section{Haskell}
 
-Haskell je funncionalni programski jezik koji
+Haskell je moderan, standardan, nije striktan, čisto funkcionalan programski
+jezik. Dizajniran je za širok spektar primjena, od numeričkih do
+simboličkih \cite{haskell_intro}.
+
+Haskell je nastao 1990. godine te nakon nekoliko godina razvoja glavne osobine
+su mu bile \cite{haskell_history}:
 
 \begin{itemize}
-\item static typed
-\item type safety
-\item laziness
+\item Statički pisan
+\item Sigurnost tipova
+\item Lijenost
+\item Klase tipova.
 \end{itemize}
 
-% TODO
-\subsection{Networking}
+Statički pisan jezik zahtijeva da pri kompilaciji koda svi tipovi podataka budu
+poznati, što donosi niz prednosti kao primjećivanje grešaka prije nego što se
+program izvrši, efikasniji kod jer compiler zna unaprijed veličinu podataka,
+nije potrebno provjeravati tip podatka dok se program izvršava.
 
-Socket lib.
+Sigurnost tipova proizlazi iz strogo statičkog pisanja, ona osigurava da
+funkcije ne mogu primiti podatak pogrešnog tipa, takve će greške biti pri
+kompilaciji prepoznate od strane compilera.
 
-\begin{figure}[h]
+Lijenost (engl. \emph{Lazy evaluation}) je svojstvo jezika pri kojem se izrazi
+evaluiraju tek kada je to potrebno, rezultat komputacije se računa tek kada je
+on tražen negdje dalje. Lazy evaluation omogućuje elegantan rad sa beskonačnim
+poljima. Moguće je definirati polje sa beskonačnim brojem članova, a da program
+ne zauzme svu memoriju računala, pojedini će element liste biti evaluiran ako i
+samo ako on njemu probamo pristupiti.
+
+Klase tipova (engl. \emph{Type classes}) su nastale s ciljem omogućavanja
+implementiranja preopterećenih aritmetičkih operatora i operatora jednakosti.
+
+\subsection{Mrežno proramiranje}
+
+Za mrežno programiranje Haskell nudi za modul
+\mintinline{haskell}{Network.Socket} \cite{network_socket} koji korisniku
+pruža sve standardne C funkcije za stvaranje UNIX socket-a.
+
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[every node/.style = {font=\bf, rectangle, rounded corners,
                     minimum width=70},
@@ -39,33 +136,59 @@ Socket lib.
     \draw[connection] (bind)   to (listen);
     \draw[connection] (listen) to (accept);
 \end{tikzpicture}
-\caption{Dings kak se server napravi}
+\caption{Programski tok izrade socket servera}
+\label{fig:server_creation}
 \end{figure}
 
+Na slici \ref{fig:server_creation} je prikazan programski slijed izrade
+socket server-a. Prvo se pomoću \mintinline{haskell}{socket} funckcije stvori
+socket određenih karakteristika. U \mintinline{haskell}{Network.Socket} modulu
+je ona definirana kao:
 \mint{haskell}|socket :: Family -> SocketType -> ProtocolNumber -> IO Socket|
 
+Iz definicije funkcije vidi se da je ona zapravo ista kao i standardna C
+funkcija za stvaranje socket-a \cite[str.132]{unixnetwork}. Nakon što je stvoren
+socket njemu se treba dodijeliti lokalna adresa odabranog protokola,
+dodjeljivanje adrese postiže se s \mintinline{haskell}{bind} funkcijom čija
+definicija glasi:
 \mint{haskell}|bind :: Socket -> SockAddr -> IO ()|
 
+Slijedi pretvaranje stvorenog socket-a u pasivni socket koji će čekati na ulazne
+konekcije. To se ostvaruje pomoću funkcije \mintinline{haskell}{listen} koja je
+definirana kao:
 \mint{haskell}|listen :: Socket -> Int -> IO ()|
 
+Na kraju je još potrebno pričekati konekciju klijenta što se ostvaruje s
+funkcijom \mintinline{haskell}{accept} koja blokira daljni tok programa dok se
+klijent ne spoji. Definicija funckije glasi:
+\mint{haskell}|accept :: Socket -> IO (Socket, SockAddr)|
+Funkcija nam vraća novi socket s pomoću kojim možemo razmjenjivati podatke s
+klijentom i adresu klijenta. Razmjena se podataka može vršiti s
+\mintinline{haskell}{sendTo} i \mintinline{haskell}{recvFrom} no radi
+jednostavnosti možemo socket pretvoriti u handle te pisati i čitati podatke
+kao da se radi o datoteci. Za to postoji \mintinline{haskell}{socketToHandle}
+koja jednostavno primi socket i mode u kojem treba biti handle (read, write ili
+oboje) i vrati handle. Definicija joj glasi:
 \mint{haskell}|socketToHandle :: Socket -> IOMode -> IO Handle|
 
-
-
-\newpage
 \subsection{Istodobnost}
 
-Istodobnost (engl. \emph{Concurrency}) je svojstvo sustava s kojim se istodobno
-mogu izvršavati više računskih operacija ili komputacija.
+Istodobnost (engl. \emph{Concurrency}) je svojstvo sustava kojim se istodobno
+može izvršavati više računskih operacija ili komputacija.
 
-% TODO add ref to 'Concurrent Haskell paper'
+Ekstenzija za istodobnost u Haskell-u se pojavila 1996. godine koja uvodi dva
+nova idioma u Haskell \cite{concurrent}:
+\begin{itemize}
+        \item Procese i mehanizme za stvaranje procesa
+        \item Atomarno promjenjivo stanje
+\end{itemize}
 
-Istodobnost u Haskell-u je uglavnom izveden pomoću 'Zelenih niti"
-(engl.\emph{Green threads}). Zelene niti se ne izvršavaju u kernel-u već u
-\emph{Haskell runtime-u}. Haskell ima hibridni \emph{threading} model s kojim se
-N Haskell niti mogu vezivati na M \emph{kernel} niti.
+Istodobnost u Haskell-u je uglavnom izvedena pomoću "Zelenih niti"
+(engl.\emph{Green threads}). Zelene niti se ne izvršavaju u jezgri operativnog
+sustava već u \emph{Haskell runtime-u}. Haskell ima hibridni višenitni
+model kojim se N Haskell niti mogu vezivati na M niti operativnog sustava.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
     \node[draw=OliveGreen, rectangle, minimum width=400, minimum height=100,
@@ -107,20 +230,26 @@ N Haskell niti mogu vezivati na M \emph{kernel} niti.
 \label{fig:thread_model}
 \end{figure}
 
+Na slici \ref{fig:thread_model} je prikazano kako se Haskell niti mapiraju na
+niti operativnog sustava.
 Interno se u Haskell-u stvaranje nove niti pretvara u alokaciju strukture koja
 sprema trenutno stanje niti te se niti pretvaraju u jednu petlju.
 
-Za stvaranje nove niti Haskell nudi \mintinline{haskell}{forkIO} funkciju čiji
-je tip definiran kao:
+Za stvaranje nove niti Haskell nudi \mintinline{haskell}{forkIO} funkciju koja
+je dio \mintinline{haskell}{Control.Concurrent} modula
+\cite{control_concurrent}, a definirana je kao:
 \mint{haskell}|forkIO :: IO () -> IO ThreadId|
 
 Što znači da funkcija prima kao prvi argument komputaciju (engl.
-\emph{computation}) i vraća kao rezultat \emph{ThreadId} što nam služi kao
-referenca na novu nit koju će funkcija stvoriti.
+\emph{computation}) i vraća novu komputaciju koja kao rezultat proizvodi
+\mintinline{haskell}{ThreadId} što nam služi kao referenca na novu nit koju će
+funkcija stvoriti.
 
-Osim niti za istodobno izvršavanje programa bitna je i komunikacija između niti.
-Za komunikaciju izmedu niti Haskell nudi mutabilne dijeljene varijable zvane
-MVar (Mutabel Variables). One se mogu koristiti na razne načine:
+Osim niti za istodobno izvršavanje programa, bitna je i komunikacija između niti.
+Za komunikaciju između niti Haskell nudi mutabilne dijeljene varijable zvane
+\mintinline{haskell}{MVar} (Mutable Variables) koje se nalaze unutar
+\mintinline{haskell}{Control.Concurrent.MVar} modula \cite{mvar}. One se mogu
+koristiti na razne načine:
 
 \begin{itemize}
 \item Sinkronizirane mutabilne varijable.
@@ -128,16 +257,95 @@ MVar (Mutabel Variables). One se mogu koristiti na razne načine:
 \item Binarni semafori.
 \end{itemize}
 
-Mvar:
+Nova mutabilna varijabla koja sadrži podatak proizvoljnog tipa može se napraviti
+s \mintinline{haskell}{newMVar}, definirana je kao:
 \mint{haskell}|newMVar :: a -> IO (MVar a)|
 
+Nakon što je varijabla stvorena, njom se može na razne načine manipulirati, između
+ostalog može se zapisati novi podatak u nju, pročitati podatak ili zamijeniti s
+nekim drugim podatkom.
 
-% TODO
+Čitanje podatka bez njegove izmjene nam omogućuje
+\mintinline{haskell}{readMVar}:
+\mint{haskell}|readMVar :: MVar a -> IO a|
+
+Za zamjenu podatka s nekim drugim postoji \mintinline{haskell}{swapMVar}
+funkcija:
+\mint{haskell}|swapMVar :: MVar a -> a -> IO a|
+
 \newpage
 \section{Python}
+
+Python je interpretiran, objektno orijentiran, programski jezik visoke razine
+s dinamičkom semantikom. Podatkovne strukture visoke razine i dinamičko pisanje
+čine ga atraktivnim za vrlo brzo razvijanje aplikacija i za skriptni jezik za
+spajanje više postojećih komponenti.
+Python posjeduje jednostavnu i laku sintaksu koja povećava čitljivost i
+olakšava održavanje software-a \cite{python_ref}.
+
+\subsection{Mrežno programiranje}
+
+Slično kao i Haskell, Python pruža sve standardne C funkcije za mrežno
+programiranje. Sve se bitne funkcije nalaze u \mintinline{python}{Socket}
+modulu \cite{python_socket}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[every node/.style = {font=\bf, rectangle, rounded corners,
+                    minimum width=70},
+                    connection/.style = {-Latex, Peach, line width=2}]
+    \node[draw=OliveGreen, fill=OliveGreen]
+          (socket) {\textcolor{white}{socket()}};
+
+    \node[draw=DarkOrchid, fill=DarkOrchid, right=of socket]
+          (connect) {\textcolor{white}{connect()}};
+
+    \draw[connection] (socket) to (connect);
+\end{tikzpicture}
+\caption{Programski tok izrade socket klijenta}
+\label{fig:client_creation}
+\end{figure}
+
+Na slici \ref{fig:client_creation} je prikazan programski tok izrade socket
+klijenta. Slično kao i sa serverom, prvo se stvori socket:
+\mint{python}|socket.socket()|
+
+Nakon stvaranja socketa potrebno ga je samo spojiti na serverski kraj socket-a:
+\mint{python}|socket.connect()|
+
+Nakon spajanja možemo socket pretvoriti \emph{file} objekt te čitati i pisati po
+njemu kao da je datoteka:
+\mint{python}|socket.makefile()|
+
+Izrada socket-klijenta je daleko lakša od servera pogotovo jer se nerijetko ne
+moramo brinuti o više istovremenih konekcija.
+
+\newpage
+\subsection{Urwid}
+
+Urwid je Python biblioteka za izradu tekstualnih korisničkih sučelja. Urwid je
+alternativna biblioteka standardnoj Curses biblioteci \cite{curses}, interno
+koristi Curses biblioteku, no Urwid olakšava neke teže poslove pri izradi
+tekstualnih sučelja \cite{urwid}.
+
+Programi s Curses tekstualnim sučeljem često sliče programima s grafičkim
+sučeljem koji posjeduju tekstualne kutije, razne forme za ispunjavanje, liste
+s navigacijskim trakama i gumbe. Takvi grafički elementi ih mogu učiniti
+lakšim za korištenje naspram standardnih tekstualnih programa, dok i dalje mogu
+raditi na čisto tekstualnim uređajima. Programi s Curses tekstualnim sučeljem
+također zahtijevaju manje resursa naspram grafičkih programa.
+
+Urwid koristi događajnu petlju (engl. \emph{Event loop}) koja olakšava
+rukovanje programskim ulazima i osvježavanje sučelja.
+
 \subsection{Event loop}
 
-\begin{figure}[h]
+Event loop je programski konstrukt koji čeka i otprema događaje ili poruke
+unutar programa. Event loop šalje zahtjev pružatelju događaja (koji uglavnom
+blokira sve dok neki događaj ne bude dostupan) te zatim poziva određenog
+rukovatelja. Event loop je jedan od načina asinkronog programiranja.
+
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=0.9]
 \newcommand{\arcarrow}[8]% inner radius, middle radius, outer radius, start angle, end angle, tip protusion angle, options, text
@@ -160,39 +368,39 @@ Mvar:
                 draw=MidnightBlue, very thick} {Poll};
     \arcarrow {4}{4.5}{5}{205+20}{205+100}{5} {fill=MidnightBlue,
                 draw=MidnightBlue, very thick} {Run callbacks};
-
 \end{tikzpicture}
 \caption{Event loop schematic}
+\label{fig:event_loop}
 \end{figure}
 
-\subsection{Urwid}
-
-\subsection{Python Networking}
-
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[every node/.style = {font=\bf, rectangle, rounded corners,
-                    minimum width=70},
-                    connection/.style = {-Latex, Peach, line width=2}]
-    \node[draw=OliveGreen, fill=OliveGreen]
-          (socket) {\textcolor{white}{socket()}};
-
-    \node[draw=DarkOrchid, fill=DarkOrchid, right=of socket]
-          (connect) {\textcolor{white}{connect()}};
-
-    \draw[connection] (socket) to (connect);
-\end{tikzpicture}
-\caption{Dings kak se client napravi}
-\end{figure}
+Na slici \ref{fig:event_loop} je prikazan programski tok Event loop-a. Prvo se
+izračuna koliko će se čekati na događaj pa se pomoću Unix sistemskog poziva
+\emph{poll} čeka na događaj te se na kraju poziva funkcija koja je namijenjena za
+obradu određenog događaja.
 
 \newpage
 \section{Firmata}
+
+Firmata je jednostavan MIDI baziran protokol koji je namijenjen za komunikaciju
+računala s mikroupravljačem. Cilj mu je omogućiti direktno upravljanje što većim
+dijelom mikroupravljača od strane računala.
+
+Za podatkovni format protokola odabrane su MIDI \cite{midi} poruke. Nije u
+potpunosti kompatibilan sa MIDI standardom pošto se koristi brža serijska
+konekcija i poruke se ne preklapaju u svim slučajevima no za parsiranje poruka
+moguće je koristiti postojeće MIDI parsere.
+
+Protokol se može implementirati kao firmware za bilo koji mikroupravljač ili kao
+software za računalo. Prva implementacija Firmate za mikroupravljače je bila za
+Arduino obitelj mikroupravljača. Kao software za računalo postoji mnogo
+Firmata implementacija za razne jezike između ostalog za Python \cite{pyfirmata}
+i Haskell \cite{harduino}
 
 \begin{table}[h]
 \centering
     \begin{tabular}{|c|c|}
         \hline
-        Naredba               & Command? \\
+        Naredba               & Numerička vrijednost \\
         \hline
         analog I/O message    & 0xE0 \\
         \hline
@@ -215,89 +423,55 @@ Mvar:
         system reset          & 0xFF \\
         \hline
     \end{tabular}
-    \caption{Tablica}
+    \caption{Firmata naredbe}
+    \label{tbl:firmata}
 \end{table}
 
+Na tablici \ref{tbl:firmata} se vide neke od Firmata naredbi i njihove
+odgovarajuće numeričke vrijednosti. Da bi se naredio reset mikroupravljača
+jednostavno se preko serijske veze pošalje vrijednost 0xFF te nakon što
+mikroupravljač primi poruku izvršit će reset rutinu.
 
-\newpage
-\section{Matematički model postrojenja}
+\section{JSON-RPC}
 
-\begin{equation} \frac{dV}{dt} = q_{in} - q_{out} \end{equation}
+JSON-RPC je jednostavan protokol za udaljene proceduralne pozive, ne sadržava
+stanje i nije definiran kao transportan protokol \cite{jsonRPC}. Koristi JSON
+\cite{jsonRFC} kao podatkovni format.
 
-\begin{equation} q_{out} = a \sqrt{2gh} \end{equation}
+Pozivna poruka se sastoji od:
+\begin{itemize}
+        \item jsonrpc - verzija protokola
+        \item method - ime udaljene metode koja se poziva
+        \item params - ulazni parametri za metodu
+        \item id - identifikacijska oznaka poruke
+\end{itemize}
 
-\begin{equation} q_{in} = k_p V \end{equation}
+Ulazni parametri moraju biti strukturiran podatak, mogu biti u obliku niza ili
+JSON objekt s imenovanim varijablama koje odgovaraju parametrima pozvane
+metode.
 
-\begin{equation} A\frac{dh}{dt} = k_p V - a \sqrt{2gh} \end{equation}
+Odgovor se sastoji od:
+\begin{itemize}
+    \item jsonrpc - verzija protokola ("2.0")
+    \item result - rezultat koji vraća pozvana metoda
+    \item error - greška ako ona postoji
+    \item id - identifikacijska oznaka poruke
+\end{itemize}
 
-\begin{equation} \frac{d\delta h}{dt} = \frac{k_p}{A} \delta V -
-                 \frac{a \sqrt{2g}}{2 A \sqrt{h_0}} \delta h \end{equation}
+Ako dolazi do greške odgovor neće sadržavat rezultat, rezultat će biti
+zamijenjen s greškom, svi ostali dijelovi odgovora ostaju isti.
+Identifikacijska oznaka u odgovoru mora biti ista kao i u pozivu.
 
-\begin{equation} \frac{d\delta h}{dt} = k_1 \delta V
-                 - k_2 \delta h \end{equation}
+Primjer poziva:
+\mint{json}|{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}|
 
-\begin{equation} s H(s) = k_1 V(s) - k_2 H(s) \end{equation}
+Ovdje se vidi poziv koji koristi verziju 2.0 JSON-RPC protokola, poziva metodu
+\emph{substract} kojoj predaje parametre u obliku niza (brojčane vrijednosti 42
+i 23) te koristi identifikacijsku oznaku s brojem 1.
 
-\begin{equation} H(s)(s+k_2) = k_1 V(s) \end{equation}
+Primjer odgovora za prethodnu pozivnu poruku:
+\mint{json}|{"jsonrpc": "2.0", "result": 19, "id": 1}|
 
-\begin{equation} G(s) = \frac{H(s)}{V(s)} = \frac{k_1}{s+k_2} \end{equation}
-
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[every node/.style = {font = \footnotesize}]
-    \tikzset{weird fill/.style={append after command={
-    \pgfextra
-        \draw [#1, sharp corners, fill=#1]%
-        (\tikzlastnode.west)%
-        [rounded corners=0] |- (\tikzlastnode.north)%
-        [rounded corners=3] -| (\tikzlastnode.east)%
-        [rounded corners=0] |- (\tikzlastnode.south)%
-        [rounded corners=0] -| (\tikzlastnode.west);
-        \endpgfextra}}}
-
-    \draw [rounded corners=3] (-5,10) -- (-2,10) -- (-2,9);
-    \draw [rounded corners=3] (-5,10.5) -- (-1.5,10.5) -- (-1.5,9);
-    \draw (-1.75, 9) circle [x radius=0.25, y radius=0.05];
-    \draw (-4, 10.25) node [font=\normalsize] {$q_{in}$};
-    \draw [-Latex, thick] (-3.5, 10.25) -- (-2.5, 10.25);
-
-    \draw (0, 2.5) node[rectangle, minimum width=228, minimum height=140,
-    fill=NavyBlue] {};
-
-    \draw [fill=NavyBlue] (0,0) circle [x radius=4, y radius=0.5];
-    \draw [fill=NavyBlue, thick, dashed] (0,5) circle [x radius=4, y radius=0.5];
-
-    \node [font=\large] (area) {\textcolor{white}{A}};
-    \node [font=\large, above=4.4 of area] {\textcolor{white}{V}};
-
-    \draw (4,9)  arc[x radius = 4, y radius = 0.5, start angle=0, end angle=112];
-    \draw (4,9)  arc[x radius = 4, y radius = 0.5, start angle=0, end angle=-240];
-
-    \draw (-4,0)  -- (-4,9);
-    \draw (4,0)   -- (4,0.5);
-    \draw (4,1.2) -- (4,9);
-
-    \draw (4.9, 0.85)
-    node[weird fill=NavyBlue, rectangle, minimum width=62, minimum height=19]
-    (qout1) {};
-    \draw (4.5, 0.85) node [font=\normalsize] {\textcolor{white}{$q_{out}$}};
-
-    \node [below right=-0.1 and -0.7 of qout1, fill=NavyBlue, minimum width=20, minimum
-    height=17] (qout2) {};
-
-    \draw [NavyBlue, fill=NavyBlue] (5.2, 0.6) -- (5.2,0.7) -- (5.5,0.7) -- (5.30, 0.4);
-    \draw [NavyBlue, fill=NavyBlue] (5.2, 0.6) -- (5.2,0.5) -- (5.5,0.49);
-    \draw [rounded corners=3] (4,1.2) -- (6,1.2) -- (6,0);
-    \draw [rounded corners=3] (4,0.5) -- (5.3,0.5) -- (5.3,0);
-
-    \draw [fill=NavyBlue] (5.65,0) circle [x radius=0.35, y radius=0.05];
-
-    \draw (-4, 0) -- (-4.5, 0);
-    \draw (-4, 5) -- (-4.5, 5);
-    \draw [Latex-Latex] (-4.5, 0) -- (-4.5, 5);
-    \draw (-4.7, 2.5) node [font=\large] {h};
-
-\end{tikzpicture}
-\caption{Šematski model postrojenja}
-\end{figure}
-
+U odgovoru se vidi da server koristi isti protokol kao klijent, vraća rezultat
+pozvane metode te koristi istu identifikacijsku oznaku kao što je dobio u
+pozivnoj poruci od klijenta.
