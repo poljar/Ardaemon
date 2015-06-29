@@ -37,7 +37,7 @@ data Options = Options {
 options :: Options
 options = Options {
     port           = 4040            &= help "Listnening port",
-    arduinoPort    = "/dev/ttyACM0"  &= help "Path to the arduino port",
+    arduinoPort    = "/dev/ttyACM0"  &= help "Path to the arduino serial port",
     simulate       = False           &= help "Simulate controller",
     debugRegulator = False           &= help "Enable debugging info for the regulator",
     verbose        = False           &= help "Output more"
