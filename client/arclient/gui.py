@@ -453,7 +453,7 @@ def main():
     def periodic_tasks(loop, data):
         request , _ = lvl_cmd('update-tank', [])
         try:
-            sock.send(bytes(request, 'utf-8'))
+            sock.sendall(bytes(request, 'utf-8'))
         except BrokenPipeError as e:
             pass
 
