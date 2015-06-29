@@ -79,20 +79,20 @@ startDaemon port arduinoPort simulate = do
     referenceChan <- newChan
     let com = ProcCom pv referenceChan
 
-    _ <- forkIO $ mainLoop sock com
+    _ <- forkIO $ serverLoop sock com
 
     controllerBroker arduinoPort simulate com
 
 
-mainLoop :: Socket -> ProcCom PVType -> IO ()
-mainLoop sock com = do
+serverLoop :: Socket -> ProcCom PVType -> IO ()
+serverLoop sock com = do
     (s, host) <- accept sock
     let hostinfo = show host
     noticeM rootLoggerName $ "Connected:    " ++ hostinfo
     hdl <- socketToHandle s ReadWriteMode
     _ <- forkIO $ runConn hdl com hostinfo
 
-    mainLoop sock com
+    serverLoop sock com
 
 
 controllerBroker :: FilePath -> Bool -> ProcCom PVType -> IO ()
