@@ -1,5 +1,5 @@
 \newpage
-\chapter{Pregled korištenih programskih jezika i idioma}
+\chapter{Pregled korištenih programskih jezika i idioma} \label{chpt:first}
 
 U ovom su poglavlju detaljno opisani programski jezici, tehnike i komunikacijski
 protokoli koji su korištene pri izradi diplomskoga rada.
@@ -110,6 +110,7 @@ Klase tipova (engl. \emph{Type classes}) su nastale s ciljem omogućavanja
 implementiranja preopterećenih aritmetičkih operatora i operatora jednakosti.
 
 \subsection{Mrežno proramiranje}
+\label{subsect:haskell_net}
 
 Za mrežno programiranje Haskell nudi za modul
 \mintinline{haskell}{Network.Socket} \cite{network_socket} koji korisniku
@@ -117,8 +118,8 @@ pruža sve standardne C funkcije za stvaranje UNIX socket-a.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[every node/.style = {font=\bf, rectangle, rounded corners,
-                    minimum width=70},
+\begin{tikzpicture}[every node/.style = {font=\large\bf, rectangle,
+                    rounded corners, minimum width=70},
                     connection/.style = {-Latex, Peach, line width=2}]
     \node[draw=OliveGreen, fill=OliveGreen]
           (socket) {\textcolor{white}{socket()}};
@@ -273,6 +274,30 @@ Za zamjenu podatka s nekim drugim postoji \mintinline{haskell}{swapMVar}
 funkcija:
 \mint{haskell}|swapMVar :: MVar a -> a -> IO a|
 
+Za izmjenu više dijeljenih varijabli postoji
+\mintinline{haskell}{Control.Concurrent.Chan} \cite{conc.chan} modul, koji
+sadržava implementaciju neograničenog komunikacijskog kanala.
+
+Novi komunikacijski kanal se stvara s \mintinline{haskell}{newChan} funkcijom:
+\mint{haskell}|newChan :: IO (Chan a)|
+
+Funkcija stvara novi prazni komunikacijski kanal određenog tipa te ga vraća kao
+rezultat. Komunikacijski sprema vrijednosti i čuva ih sve dok ih se ne izvadi iz
+njega. Služi kao FIFO spremnik vrijednosti određenog tipa.
+
+Novi podatak se u kanal stavlja pomoću \mintinline{haskell}{writeChan}
+funkcijom:
+\mint{haskell}|writeChan :: Chan a -> a -> IO ()|
+
+Funkcija kao argument prima komunikacijski kanal i podatak. Tip podatka mora
+biti istog tipa kao što je određeno pri stvaranju komunikacijskog kanala.
+Vrijednost se sprema u kanal te će tamo ostat sve dok ona ne bude pročitana sa
+\mintinline{haskell}{readChan} funkcijom:
+\mint{haskell}|readChan :: Chan a -> IO a|
+
+\mintinline{haskell}{readChan} funkcija kao argument prima komunikacijski kanal
+i vraća najstariji podatak koji se nalazi u kanalu.
+
 \newpage
 \section{Python}
 
@@ -291,8 +316,8 @@ modulu \cite{python_socket}.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[every node/.style = {font=\bf, rectangle, rounded corners,
-                    minimum width=70},
+\begin{tikzpicture}[every node/.style = {font=\large\bf, rectangle,
+                    rounded corners, minimum width=80},
                     connection/.style = {-Latex, Peach, line width=2}]
     \node[draw=OliveGreen, fill=OliveGreen]
           (socket) {\textcolor{white}{socket()}};
@@ -310,11 +335,16 @@ Na slici \ref{fig:client_creation} je prikazan programski tok izrade socket
 klijenta. Slično kao i sa serverom, prvo se stvori socket:
 \mint{python}|socket.socket()|
 
-Nakon stvaranja socketa potrebno ga je samo spojiti na serverski kraj socket-a:
+Socket mora biti iste vrste kao i socket servera na koji se želimo spojiti.
+Nakon stvaranja socketa potrebno ga je spojiti na serverski kraj socket-a.
+Spajanje na server se vrši pomoću \mintinline{py3}{connect()} funkcije kojoj se
+predaje adresa i port socket servera:
 \mint{python}|socket.connect()|
 
-Nakon spajanja možemo socket pretvoriti \emph{file} objekt te čitati i pisati po
-njemu kao da je datoteka:
+Nakon spajanja može započeti komunikacija između klijenta i servera.
+Komunikacija se može izvršiti pomoću standardnih C funkcija \mintinline{c}{send}
+i \mintinline{c}{recv} ili kao i u Haskellu se socket može pretvoriti u handle
+te ga koristit kao da je datoteka:
 \mint{python}|socket.makefile()|
 
 Izrada socket-klijenta je daleko lakša od servera pogotovo jer se nerijetko ne
@@ -379,6 +409,40 @@ izračuna koliko će se čekati na događaj pa se pomoću Unix sistemskog poziva
 obradu određenog događaja.
 
 \newpage
+\section{Arduino}
+
+Arduino je mali uređaj za izradu računalnih sustava koji mogu mjeriti fizikalne
+veličine i upravljati fizičkim svijetom. Arduino je open-source računalni sustav
+koji se bazira na jednostavnoj mikroupravljačkoj pločici i razvojno okruženje za
+pisanje software-a.
+
+Arduino se može koristiti za razvoj interaktivnih fizičkih objekata, može
+primati ulazne fizikalne veličine od raznih senzora i upravljati sa svijetlima,
+motorima ili drugim fizičkim izlazima. Arduino projekti mogu biti samostalni ili
+mogu komunicirat sa software-om koji se nalazi na računalu.
+\cite{arduino_intro}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=1.6]{figures/arduino_uno.pdf}
+\caption{Arduino UNO mikroupravljačka ploča.\protect\footnotemark}
+\label{fig:arduino}
+\end{figure}
+
+\footnotetext{Izvorna slika, licencirana pod Creative Commons
+    Attribution-ShareALike 3.0 preuzeta je i prilagođena od Fritzing projekta
+(\url{https://raw.githubusercontent.com/fritzing/fritzing-parts/master/svg/core/breadboard/arduino_Uno_Rev3_breadboard.svg})}
+
+Na slici \ref{fig:arduino} se vidi Arduino UNO mikroupravljačka ploča. Za
+mikroupravljač se koristi ATmega328 \cite{atmega}. Mikroupravljačka pločica posjeduje 14
+digitalnih ulazno/izlaznih pinova od kojih se 6 mogu koristiti kao pulsno
+širinski modulirani izlazi, 6 analognih ulaza, \unit{16}{\mega\hertz} keramički
+oscilator, USB sučelje, ulaz za eksterno napajanje i reset tipku. Pločica se
+može napajati preko USB sučelja ili preko ulaza za eksterno napajanje.
+Komunikacija s računalom se odvija preko USB-serijskog sučelja. Za programski
+dio mikroupravljač sadrži \unit{32}{\kilo\byte} programibilne flash memorije.
+
+\newpage
 \section{Firmata}
 
 Firmata je jednostavan MIDI baziran protokol koji je namijenjen za komunikaciju
@@ -397,6 +461,7 @@ Firmata implementacija za razne jezike između ostalog za Python \cite{pyfirmata
 i Haskell \cite{harduino}
 
 \begin{table}[h]
+\setlength{\tabcolsep}{18pt}
 \centering
     \begin{tabular}{|c|c|}
         \hline
@@ -432,6 +497,7 @@ odgovarajuće numeričke vrijednosti. Da bi se naredio reset mikroupravljača
 jednostavno se preko serijske veze pošalje vrijednost 0xFF te nakon što
 mikroupravljač primi poruku izvršit će reset rutinu.
 
+\newpage
 \section{JSON-RPC}
 
 JSON-RPC je jednostavan protokol za udaljene proceduralne pozive, ne sadržava
@@ -475,3 +541,4 @@ Primjer odgovora za prethodnu pozivnu poruku:
 U odgovoru se vidi da server koristi isti protokol kao klijent, vraća rezultat
 pozvane metode te koristi istu identifikacijsku oznaku kao što je dobio u
 pozivnoj poruci od klijenta.
+
