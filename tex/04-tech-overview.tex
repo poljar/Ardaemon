@@ -57,21 +57,21 @@ protokoli koji su korištene pri izradi diplomskoga rada.
 \label{fig:main_sheme}
 \end{figure}
 
-Na slici \ref{fig:main_sheme} se vidi sinopsis diplomskoga rada koji je podijeljen u 3 dijela:
+Na slici \ref{fig:main_sheme} je prikazan sinopsis diplomskoga rada koji je podijeljen u 3 dijela:
 \begin{itemize}
         \item Postrojenje
         \item Server
         \item Klijent
 \end{itemize}
 
-Kao što je već spomenuto u poglavlju \ref{introduction} postrojenje sastoji se
+Kao što je već spomenuto u poglavlju \ref{introduction}, postrojenje se sastoji
 od mikroupravljača i dviju boca koje služe kao model za održavanje razine vode.
 
-Server koji je pisan u Haskell-u također se sastoji od dva dijela, regulatora i
-socket server-a. Regulacijski dio s postrojenjem komunicira pomoću Firmata
+Server, koji je pisan u Haskellu, također se sastoji od dva dijela, regulatora i
+socket servera. Regulacijski dio s postrojenjem komunicira pomoću Firmata
 protokola, a socket server s klijentima komunicira pomoću JSON-RPC protokola.
 
-Klijent koji je pisan u Python-u sastoji se od korisničkog sučelja i socket
+Klijent koji je pisan u Pythonu sastoji se od korisničkog sučelja i socket
 klijenta koji periodički dohvaća trenutno stanje postrojenja od servera.
 
 \section{Haskell}
@@ -81,7 +81,7 @@ jezik. Dizajniran je za širok spektar primjena, od numeričkih do
 simboličkih \cite{haskell_intro}.
 
 Haskell je nastao 1990. godine te nakon nekoliko godina razvoja glavne osobine
-su mu bile \cite{haskell_history}:
+bile su mu \cite{haskell_history}:
 
 \begin{itemize}
 \item Statički pisan
@@ -95,26 +95,26 @@ poznati, što donosi niz prednosti kao primjećivanje grešaka prije nego što s
 program izvrši, efikasniji kod jer compiler zna unaprijed veličinu podataka,
 nije potrebno provjeravati tip podatka dok se program izvršava.
 
-Sigurnost tipova proizlazi iz strogo statičkog pisanja, ona osigurava da
-funkcije ne mogu primiti podatak pogrešnog tipa, takve će greške biti pri
-kompilaciji prepoznate od strane compilera.
+Sigurnost tipova proizlazi iz strogo statičkog pisanja. Ona osigurava
+funkcije od primanja podatak pogrešnog tipa. Takve će greške prepoznati compiler pri
+kompilaciji.
 
 Lijenost (engl. \emph{Lazy evaluation}) je svojstvo jezika pri kojem se izrazi
-evaluiraju tek kada je to potrebno, rezultat komputacije se računa tek kada je
-on tražen negdje dalje. Lazy evaluation omogućuje elegantan rad sa beskonačnim
-poljima. Moguće je definirati polje sa beskonačnim brojem članova, a da program
-ne zauzme svu memoriju računala, pojedini će element liste biti evaluiran ako i
-samo ako on njemu probamo pristupiti.
+evaluiraju tek kada je to potrebno. Rezultat komputacije računa se tek kada je
+on zatražen negdje dalje. Lazy evaluation omogućuje elegantan rad s beskonačnim
+poljima. Moguće je definirati polje s beskonačnim brojem članova, a da program
+ne zauzme svu memoriju računala. Pojedini će se elementi polja evaluirati ako, i
+samo ako, mu probamo pristupiti.
 
-Klase tipova (engl. \emph{Type classes}) su nastale s ciljem omogućavanja
-implementiranja preopterećenih aritmetičkih operatora i operatora jednakosti.
+Klase tipova (engl. \emph{Type classes}) nastale kako bi omogućile
+implementiranje preopterećenih aritmetičkih operatora i operatora jednakosti.
 
-\subsection{Mrežno proramiranje}
+\subsection{Mrežno programiranje}
 \label{subsect:haskell_net}
 
-Za mrežno programiranje Haskell nudi za modul
-\mintinline{haskell}{Network.Socket} \cite{network_socket} koji korisniku
-pruža sve standardne C funkcije za stvaranje UNIX socket-a.
+Za mrežno programiranje Haskell nudi modul
+\mintinline{haskell}{Network.Socket} \cite{network_socket}, koji korisniku
+pruža sve standardne C funkcije za stvaranje UNIX socketa.
 
 \begin{figure}[H]
 \centering
@@ -142,26 +142,26 @@ pruža sve standardne C funkcije za stvaranje UNIX socket-a.
 \end{figure}
 
 Na slici \ref{fig:server_creation} je prikazan programski slijed izrade
-socket server-a. Prvo se pomoću \mintinline{haskell}{socket} funckcije stvori
+socket servera. Prvo se pomoću \mintinline{haskell}{socket} funckcije stvori
 socket određenih karakteristika. U \mintinline{haskell}{Network.Socket} modulu
-je ona definirana kao:
+je funkcija definirana kao:
 \mint{haskell}|socket :: Family -> SocketType -> ProtocolNumber -> IO Socket|
 
-Iz definicije funkcije vidi se da je ona zapravo ista kao i standardna C
-funkcija za stvaranje socket-a \cite[str.132]{unixnetwork}. Nakon što je stvoren
+Iz definicije funkcije vidljivo je kako je ona zapravo ista kao i standardna C
+funkcija za stvaranje socketa \cite[str.132]{unixnetwork}. Nakon što je stvoren
 socket njemu se treba dodijeliti lokalna adresa odabranog protokola,
 dodjeljivanje adrese postiže se s \mintinline{haskell}{bind} funkcijom čija
 definicija glasi:
 \mint{haskell}|bind :: Socket -> SockAddr -> IO ()|
 
-Slijedi pretvaranje stvorenog socket-a u pasivni socket koji će čekati na ulazne
+Slijedi pretvaranje stvorenog socketa u pasivni socket koji će čekati na ulazne
 konekcije. To se ostvaruje pomoću funkcije \mintinline{haskell}{listen} koja je
 definirana kao:
 \mint{haskell}|listen :: Socket -> Int -> IO ()|
 
 Na kraju je još potrebno pričekati konekciju klijenta što se ostvaruje s
 funkcijom \mintinline{haskell}{accept} koja blokira daljni tok programa dok se
-klijent ne spoji. Definicija funckije glasi:
+klijent ne spoji. Definicija funkcije glasi:
 \mint{haskell}|accept :: Socket -> IO (Socket, SockAddr)|
 Funkcija nam vraća novi socket s pomoću kojim možemo razmjenjivati podatke s
 klijentom i adresu klijenta. Razmjena se podataka može vršiti s
@@ -177,15 +177,15 @@ oboje) i vrati handle. Definicija joj glasi:
 Istodobnost (engl. \emph{Concurrency}) je svojstvo sustava kojim se istodobno
 može izvršavati više računskih operacija ili komputacija.
 
-Ekstenzija za istodobnost u Haskell-u se pojavila 1996. godine koja uvodi dva
+Ekstenzija za istodobnost u Haskellu pojavila se 1996. godine koja uvodi dva
 nova idioma u Haskell \cite{concurrent}:
 \begin{itemize}
         \item Procese i mehanizme za stvaranje procesa
         \item Atomarno promjenjivo stanje
 \end{itemize}
 
-Istodobnost u Haskell-u je uglavnom izvedena pomoću "Zelenih niti"
-(engl.\emph{Green threads}). Zelene niti se ne izvršavaju u jezgri operativnog
+Istodobnost u Haskellu uglavnom je izvedena pomoću "Zelenih niti"
+(engl.\emph{Green threads}). Zelene niti ne izvršavaju se u jezgri operativnog
 sustava već u \emph{Haskell runtime-u}. Haskell ima hibridni višenitni
 model kojim se N Haskell niti mogu vezivati na M niti operativnog sustava.
 
@@ -233,7 +233,7 @@ model kojim se N Haskell niti mogu vezivati na M niti operativnog sustava.
 
 Na slici \ref{fig:thread_model} je prikazano kako se Haskell niti mapiraju na
 niti operativnog sustava.
-Interno se u Haskell-u stvaranje nove niti pretvara u alokaciju strukture koja
+Interno se u Haskellu stvaranje nove niti pretvara u alokaciju strukture koja
 sprema trenutno stanje niti te se niti pretvaraju u jednu petlju.
 
 Za stvaranje nove niti Haskell nudi \mintinline{haskell}{forkIO} funkciju koja
@@ -241,9 +241,9 @@ je dio \mintinline{haskell}{Control.Concurrent} modula
 \cite{control_concurrent}, a definirana je kao:
 \mint{haskell}|forkIO :: IO () -> IO ThreadId|
 
-Što znači da funkcija prima kao prvi argument komputaciju (engl.
+Što znači da funkcija kao prvi argument prima komputaciju (engl.
 \emph{computation}) i vraća novu komputaciju koja kao rezultat proizvodi
-\mintinline{haskell}{ThreadId} što nam služi kao referenca na novu nit koju će
+\mintinline{haskell}{ThreadId}, što nam služi kao referenca na novu nit koju će
 funkcija stvoriti.
 
 Osim niti za istodobno izvršavanje programa, bitna je i komunikacija između niti.
@@ -266,7 +266,7 @@ Nakon što je varijabla stvorena, njom se može na razne načine manipulirati, i
 ostalog može se zapisati novi podatak u nju, pročitati podatak ili zamijeniti s
 nekim drugim podatkom.
 
-Čitanje podatka bez njegove izmjene nam omogućuje
+Čitanje podatka bez njegove izmjene omogućuje nam
 \mintinline{haskell}{readMVar}:
 \mint{haskell}|readMVar :: MVar a -> IO a|
 
@@ -278,20 +278,20 @@ Za izmjenu više dijeljenih varijabli postoji
 \mintinline{haskell}{Control.Concurrent.Chan} \cite{conc.chan} modul, koji
 sadržava implementaciju neograničenog komunikacijskog kanala.
 
-Novi komunikacijski kanal se stvara s \mintinline{haskell}{newChan} funkcijom:
+Novi komunikacijski kanal stvara se s \mintinline{haskell}{newChan} funkcijom:
 \mint{haskell}|newChan :: IO (Chan a)|
 
 Funkcija stvara novi prazni komunikacijski kanal određenog tipa te ga vraća kao
 rezultat. Komunikacijski sprema vrijednosti i čuva ih sve dok ih se ne izvadi iz
 njega. Služi kao FIFO spremnik vrijednosti određenog tipa.
 
-Novi podatak se u kanal stavlja pomoću \mintinline{haskell}{writeChan}
+Novi podatak stavlja se u kanal \mintinline{haskell}{writeChan}
 funkcijom:
 \mint{haskell}|writeChan :: Chan a -> a -> IO ()|
 
 Funkcija kao argument prima komunikacijski kanal i podatak. Tip podatka mora
-biti istog tipa kao što je određeno pri stvaranju komunikacijskog kanala.
-Vrijednost se sprema u kanal te će tamo ostat sve dok ona ne bude pročitana sa
+odgovarati tipu podatka određenog pri stvaranju komunikacijskog kanala.
+Vrijednost se sprema u kanal te tamo ostaje sve dok se ona ne pročita
 \mintinline{haskell}{readChan} funkcijom:
 \mint{haskell}|readChan :: Chan a -> IO a|
 
@@ -306,7 +306,7 @@ s dinamičkom semantikom. Podatkovne strukture visoke razine i dinamičko pisanj
 čine ga atraktivnim za vrlo brzo razvijanje aplikacija i za skriptni jezik za
 spajanje više postojećih komponenti.
 Python posjeduje jednostavnu i laku sintaksu koja povećava čitljivost i
-olakšava održavanje software-a \cite{python_ref}.
+olakšava održavanje softver-a \cite{python_ref}.
 
 \subsection{Mrežno programiranje}
 
@@ -336,33 +336,33 @@ klijenta. Slično kao i sa serverom, prvo se stvori socket:
 \mint{python}|socket.socket()|
 
 Socket mora biti iste vrste kao i socket servera na koji se želimo spojiti.
-Nakon stvaranja socketa potrebno ga je spojiti na serverski kraj socket-a.
-Spajanje na server se vrši pomoću \mintinline{py3}{connect()} funkcije kojoj se
+Nakon stvaranja socketa potrebno ga je spojiti na serverski kraj socketa.
+Spajanje na server vrši se pomoću \mintinline{py3}{connect()} funkcije kojoj se
 predaje adresa i port socket servera:
 \mint{python}|socket.connect()|
 
 Nakon spajanja može započeti komunikacija između klijenta i servera.
 Komunikacija se može izvršiti pomoću standardnih C funkcija \mintinline{c}{send}
-i \mintinline{c}{recv} ili kao i u Haskellu se socket može pretvoriti u handle
-te ga koristit kao da je datoteka:
+i \mintinline{c}{recv} ili, kao i u Haskellu, socket se može pretvoriti u handle
+te se koristiti kao da je datoteka:
 \mint{python}|socket.makefile()|
 
-Izrada socket-klijenta je daleko lakša od servera pogotovo jer se nerijetko ne
+Izrada socket-klijenta daleko je lakša od servera, pogotovo jer se nerijetko ne
 moramo brinuti o više istovremenih konekcija.
 
 \newpage
 \subsection{Urwid}
 
 Urwid je Python biblioteka za izradu tekstualnih korisničkih sučelja. Urwid je
-alternativna biblioteka standardnoj Curses biblioteci \cite{curses}, interno
+alternativa za standardnu Curses biblioteku \cite{curses}. Interno
 koristi Curses biblioteku, no Urwid olakšava neke teže poslove pri izradi
 tekstualnih sučelja \cite{urwid}.
 
 Programi s Curses tekstualnim sučeljem često sliče programima s grafičkim
 sučeljem koji posjeduju tekstualne kutije, razne forme za ispunjavanje, liste
-s navigacijskim trakama i gumbe. Takvi grafički elementi ih mogu učiniti
-lakšim za korištenje naspram standardnih tekstualnih programa, dok i dalje mogu
-raditi na čisto tekstualnim uređajima. Programi s Curses tekstualnim sučeljem
+s navigacijskim trakama i gumbe. Takvi grafički elementi olakšavaju korištenje 
+programa, naspram standardnih tekstualnih programa, a ujedno omogućavaju rad na
+na čisto tekstualnim uređajima. Programi s Curses tekstualnim sučeljem
 također zahtijevaju manje resursa naspram grafičkih programa.
 
 Urwid koristi događajnu petlju (engl. \emph{Event loop}) koja olakšava
@@ -399,12 +399,12 @@ rukovatelja. Event loop je jedan od načina asinkronog programiranja.
     \arcarrow {4}{4.5}{5}{205+20}{205+100}{5} {fill=MidnightBlue,
                 draw=MidnightBlue, very thick} {Run callbacks};
 \end{tikzpicture}
-\caption{Event loop schematic}
+\caption{Programski tok \emph{Event loopa}}
 \label{fig:event_loop}
 \end{figure}
 
 Na slici \ref{fig:event_loop} je prikazan programski tok Event loop-a. Prvo se
-izračuna koliko će se čekati na događaj pa se pomoću Unix sistemskog poziva
+izračuna koliko će se čekati na događaj, pa se pomoću Unix sistemskog poziva
 \emph{poll} čeka na događaj te se na kraju poziva funkcija koja je namijenjena za
 obradu određenog događaja.
 
@@ -413,13 +413,13 @@ obradu određenog događaja.
 
 Arduino je mali uređaj za izradu računalnih sustava koji mogu mjeriti fizikalne
 veličine i upravljati fizičkim svijetom. Arduino je open-source računalni sustav
-koji se bazira na jednostavnoj mikroupravljačkoj pločici i razvojno okruženje za
-pisanje software-a.
+koji se temelji na jednostavnoj mikroupravljačkoj pločici i razvojnom okruženju za
+pisanje softvera.
 
 Arduino se može koristiti za razvoj interaktivnih fizičkih objekata, može
 primati ulazne fizikalne veličine od raznih senzora i upravljati sa svijetlima,
 motorima ili drugim fizičkim izlazima. Arduino projekti mogu biti samostalni ili
-mogu komunicirat sa software-om koji se nalazi na računalu.
+mogu komunicirati sa softverom koji se nalazi na računalu.
 \cite{arduino_intro}.
 
 \begin{figure}[H]
@@ -433,31 +433,31 @@ mogu komunicirat sa software-om koji se nalazi na računalu.
     Attribution-ShareALike 3.0 preuzeta je i prilagođena od Fritzing projekta
 (\url{https://raw.githubusercontent.com/fritzing/fritzing-parts/master/svg/core/breadboard/arduino_Uno_Rev3_breadboard.svg})}
 
-Na slici \ref{fig:arduino} se vidi Arduino UNO mikroupravljačka ploča. Za
-mikroupravljač se koristi ATmega328 \cite{atmega}. Mikroupravljačka pločica posjeduje 14
-digitalnih ulazno/izlaznih pinova od kojih se 6 mogu koristiti kao pulsno
+Na slici \ref{fig:arduino} se vidi Arduino UNO mikroupravljačka ploča. Kao
+mikroupravljač koristi se ATmega328 \cite{atmega}. Mikroupravljačka pločica posjeduje 14
+digitalnih ulazno/izlaznih pinova, od kojih se 6 mogu koristiti kao pulsno
 širinski modulirani izlazi, 6 analognih ulaza, \unit{16}{\mega\hertz} keramički
 oscilator, USB sučelje, ulaz za eksterno napajanje i reset tipku. Pločica se
 može napajati preko USB sučelja ili preko ulaza za eksterno napajanje.
-Komunikacija s računalom se odvija preko USB-serijskog sučelja. Za programski
-dio mikroupravljač sadrži \unit{32}{\kilo\byte} programibilne flash memorije.
+Komunikacija s računalom odvija se preko USB-serijskog sučelja. Za programski
+dio mikroupravljač sadrži \unit{32}{\kilo\byte} flash memorije koje se mogu programirati.
 
 \newpage
 \section{Firmata}
 
-Firmata je jednostavan MIDI baziran protokol koji je namijenjen za komunikaciju
+Firmata je jednostavan protokol baziran na MIDI-ju i koji je namijenjen za komunikaciju
 računala s mikroupravljačem. Cilj mu je omogućiti direktno upravljanje što većim
 dijelom mikroupravljača od strane računala.
 
 Za podatkovni format protokola odabrane su MIDI \cite{midi} poruke. Nije u
-potpunosti kompatibilan sa MIDI standardom pošto se koristi brža serijska
-konekcija i poruke se ne preklapaju u svim slučajevima no za parsiranje poruka
+potpunosti kompatibilan s MIDI standardom, budući da se koristi brža serijska
+konekcija i poruke se ne preklapaju u svim slučajevima. No za parsiranje poruka
 moguće je koristiti postojeće MIDI parsere.
 
 Protokol se može implementirati kao firmware za bilo koji mikroupravljač ili kao
-software za računalo. Prva implementacija Firmate za mikroupravljače je bila za
-Arduino obitelj mikroupravljača. Kao software za računalo postoji mnogo
-Firmata implementacija za razne jezike između ostalog za Python \cite{pyfirmata}
+softver za računalo. Firmata je prvi puta implementirana za mikroupravljače za
+Arduino obitelj mikroupravljača. Kao računalni softver, postoji mnogo Firmata 
+implementacija za razne jezike, između ostalog i za Python \cite{pyfirmata}
 i Haskell \cite{harduino}
 
 \begin{table}[h]
@@ -493,18 +493,18 @@ i Haskell \cite{harduino}
 \end{table}
 
 Na tablici \ref{tbl:firmata} se vide neke od Firmata naredbi i njihove
-odgovarajuće numeričke vrijednosti. Da bi se naredio reset mikroupravljača
-jednostavno se preko serijske veze pošalje vrijednost 0xFF te nakon što
-mikroupravljač primi poruku izvršit će reset rutinu.
+odgovarajuće numeričke vrijednosti. Da bi se naredio reset mikroupravljača,
+jednostavno se preko serijske veze pošalje vrijednost 0xFF te, nakon što
+mikroupravljač primi poruku, izvršit će reset rutinu.
 
 \newpage
 \section{JSON-RPC}
 
 JSON-RPC je jednostavan protokol za udaljene proceduralne pozive, ne sadržava
-stanje i nije definiran kao transportan protokol \cite{jsonRPC}. Koristi JSON
+stanje i nije definiran kao transportni protokol \cite{jsonRPC}. Koristi JSON
 \cite{jsonRFC} kao podatkovni format.
 
-Pozivna poruka se sastoji od:
+Pozivna poruka sastoji se od:
 \begin{itemize}
         \item jsonrpc - verzija protokola
         \item method - ime udaljene metode koja se poziva
@@ -512,8 +512,8 @@ Pozivna poruka se sastoji od:
         \item id - identifikacijska oznaka poruke
 \end{itemize}
 
-Ulazni parametri moraju biti strukturiran podatak, mogu biti u obliku niza ili
-JSON objekt s imenovanim varijablama koje odgovaraju parametrima pozvane
+Ulazni parametri moraju biti strukturiran podatak. Mogu biti u obliku niza ili
+JSON objekta, s imenovanim varijablama koje odgovaraju parametrima pozvane
 metode.
 
 Odgovor se sastoji od:
@@ -524,21 +524,21 @@ Odgovor se sastoji od:
     \item id - identifikacijska oznaka poruke
 \end{itemize}
 
-Ako dolazi do greške odgovor neće sadržavat rezultat, rezultat će biti
-zamijenjen s greškom, svi ostali dijelovi odgovora ostaju isti.
+Ako dolazi do greške odgovor neće sadržavati rezultat, nego će rezultat će
+zamijeniti greška, a svi ostali dijelovi odgovora ostaju isti.
 Identifikacijska oznaka u odgovoru mora biti ista kao i u pozivu.
 
 Primjer poziva:
 \mint{json}|{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}|
 
-Ovdje se vidi poziv koji koristi verziju 2.0 JSON-RPC protokola, poziva metodu
+Tu se vidi poziv koji koristi verziju 2.0 JSON-RPC protokola. Ona poziva metodu
 \emph{substract} kojoj predaje parametre u obliku niza (brojčane vrijednosti 42
 i 23) te koristi identifikacijsku oznaku s brojem 1.
 
 Primjer odgovora za prethodnu pozivnu poruku:
 \mint{json}|{"jsonrpc": "2.0", "result": 19, "id": 1}|
 
-U odgovoru se vidi da server koristi isti protokol kao klijent, vraća rezultat
+U odgovoru je vidljivo kako server koristi isti protokol kao i klijent, vraća rezultat
 pozvane metode te koristi istu identifikacijsku oznaku kao što je dobio u
 pozivnoj poruci od klijenta.
 

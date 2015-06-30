@@ -2,28 +2,28 @@
 
 \chapter{Uvod} \label{introduction}
 
-Cilj diplomskog rada je ispitati mogućnost korištenja jeftinih mikroupravljača
+Cilj je diplomskog rada ispitati mogućnost korištenja jeftinih mikroupravljača
 za jednostavne poslove automatizacije te omogućiti udaljeno upravljanje
-postrojenjem preko \emph{socket} \emph{server-a}.
+postrojenjem preko \emph{socket} \emph{servera}.
 
-Kako bi se utvrdio cilj diplomskog rada pomoću mikroupravljača je simulirano
+Kako bi se utvrdio cilj diplomskog rada, pomoću mikroupravljača je simulirano
 postrojenje. Komunikacija prema računalu je ostvarena putem \emph{USB}
-sučelja. Računalo šalje naredbe prema mikroupravljaču pomoću komunikacijskog
-protokola. \emph{Socket} \emph{server} je izrađen tako da s jedne strane koristi
+sučelja. Računalo šalje mikroupravljaču naredbe pomoću komunikacijskog
+protokola. \emph{Socket} \emph{server} izrađen je tako da s jedne strane koristi
 navedeni protokol da bi komunicirao s mikroupravljačem, a s druge strane
 omogućuje klijentima upit u stanje postrojenja i postavljanje referentne
 varijable postrojenja.
 
-Za mikroupravljač je odabran \emph{Arduino Uno} koji preko USB-serijskog sučelja
-i preko \emph{Firmata} protokola komunicira s računalom. Na \emph{Arduino} je
-spojena vodena pumpa i senzor koji mjeri razinu vode u boci. Sustav od dvije
+Za mikroupravljač odabran je \emph{Arduino Uno} koji preko USB-serijskog sučelja
+i preko \emph{Firmata} protokola komunicira s računalom. Na \emph{Arduino}
+spojena je vodena pumpa i senzor koji mjeri razinu vode u boci. Sustav od dvije
 boce čini postrojenje, u jednoj boci održava se razina vode. Na računalu se
-nalazi \emph{socket} \emph{server} pisan u \emph{Haskell-u} koji upravlja
-mikroupravljačem. Testni klijent pisan u \emph{Python-u} se spaja na
+nalazi \emph{socket} \emph{server} pisan u \emph{Haskellu} koji upravlja
+mikroupravljačem. Testni klijent pisan u \emph{Pythonu} spaja se na
 \emph{server} te dohvaća mjernu veličinu (razinu vode u boci) i prikazuje
 trenutno stanje sustava.
 
 Rad je podijeljen u dva dijela. U prvom dijelu razrađene su teorijske
 pretpostavke vezane uz temu. Važno je napomenuti kako je u ovom dijelu detaljno
 opisan proces razvoj socket servera. Drugi dio bavi se implementacijom
-postrojenja, regulatora, \emph{socket server-a} i popratnog klijenta.
+postrojenja, regulatora, \emph{socket servera} i popratnog klijenta.

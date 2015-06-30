@@ -1,0 +1,33 @@
+\newpage
+\chapter{Zaključak}
+
+U radu je razvijen i predstavljen socket server za komunikaciju s postrojenjem.
+Server komunicira s Arduino mikroupravljačkom pločicom i upravlja postrojenjem
+koje je spojeno na pločicu. Demonstrirano je uspješno automatsko upravljanje
+razine vode u spremniku. Razvijen je i klijent koji u stvarnom vremenu daje uvid
+u stanje postrojenja te omogućuje udaljenu promjenu regulirane veličine. Tijekom
+izrade, glavni problemi bili su omogućavanje istovremenog obavljanja poslova
+regulacije i posluživanja podataka udaljenim klijentima, izrada makete
+postrojenja te povezivanje svih dijelova rada u cjelinu.
+
+Predstavljeno riješenje koje koristi regulator unutar socket servera ima svoje
+prednosti i nedostatke. Nedostatci su vezani uz brzinu regulacije, zbog
+serijskog protokola koji je korišten za komunikaciju postrojenja i socket
+servera nije moguće regulirati procese koji imaju jako ograničene vremenske
+zahtjeve. Zahtjev za dodatnim računalom pored mikroupravljača za obavljanje
+posla regulacije također je jedan nedostatak. Prednosti su mogućnost rapidnog
+razvoja regulatora, mogućnost izmjene regulatora bez ponovnog programiranja
+mikroupravljača, mogućnost udaljenog upravljanja postrojenjem te fleksibilnost.
+
+Široka dostupnost jeftinih mikroupravljača te malih računalnih platformi
+omogućuje korištenje predstavljenog rješenja u razne svrhe kućne
+automatizacije. Moguća je izrada mreže automatizirnih procesa kojima je
+omogućeno daljinsko upravljanje pomoću socket servera.
+
+Riješenje također ima visoki potencijal za poboljšanja. Moguće je poboljšati
+parametre regulatora te ostvariti bolje upravljanje, prebaciti regulator na
+mikroupravljač te tako smanjiti latenciju. Na serveru se lako mogu
+implementirati razne vrste regulatora te bi se one mogle dinamički izmjenjivati.
+Komunikacija klijenta i servera izvršava se nekriptiran. Na serveru
+se također može implementirati zahtjev za autentikacijom prije nego se dozvoli uvid u
+stanje postrojenja.

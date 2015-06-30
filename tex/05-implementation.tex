@@ -1,7 +1,7 @@
 \newpage
 \chapter{Implementacija}
 
-U ovom poglavlju je objašnjena implementacija socket servera, odgovarajućeg
+U ovom poglavlju objašnjena je implementacija socket servera, odgovarajućeg
 klijenta i na kraju samog postrojenja.
 Detaljno je opisana arhitektura servera, klijenta te izrada makete postrojenja.
 
@@ -14,10 +14,10 @@ modularnost.
 
 Glavni poslovi servera su jasno razdvojeni u različite niti. Server
 sadržava tri glavne niti od koje se jedna brine oko regulacije postrojenja,
-jedna prihvaćanju konekcija klijenta i jedna kao posrednička nit između
+jedna prihvaćanju konekcija klijenta i jedna služi kao posrednička nit između
 klijenata i regulacijske niti. Nit koja se brine oko prihvaćanju konekcija od
 strane klijenta za svakog klijenta stvara novu nit te se prihvaćanje novih
-konekcija nesmetano može nastaviti.
+konekcija može nastaviti nesmetano.
 
 \begin{figure}[H]
 \centering
@@ -50,12 +50,12 @@ konekcija nesmetano može nastaviti.
 \end{figure}
 
 Na slici \ref{fig:architecture} je prikazana komunikacija između pojedinih niti
-unutar servera. Regulacijska nit označena zelenom bojom čita referentnu
-vrijednost iz djeljene varijable koju postavlja posrednička nit, označena plavom
+unutar servera. Regulacijska nit, označena zelenom bojom, čita referentnu
+vrijednost iz dijeljene varijable, koju postavlja posrednička nit, označena plavom
 bojom, a postavlja mjerenu procesnu veličinu u drugu dijeljenu varijablu koje
-klijentske niti mogu direktno očitati. Zbog zahtjeva za atomarnosti operacija
+klijentske niti mogu direktno očitati. Zbog zahtjeva za atomarnosti, operaciju
 čitanja i pisanja dijeljenih varijabli nije moguće odobriti više od jednoj niti
-zapisivanje u pojedinu dijeljenu varijablu, te radi toga postoji posrednička nit
+zapisivanje u pojedinu dijeljenu varijablu. Zbog toga postoji posrednička nit
 koja od raznih klijentskih niti preuzima referentnu vrijednost i atomarno
 prosljeđuje regulacijskoj niti.
 
@@ -77,30 +77,30 @@ startDaemon port arduinoPort simulate = do
 
     controllerBroker arduinoPort simulate com
 \end{minted}
-\caption{Main entry point}
+\caption{Početna funkcija servera}
 \label{lst:main}
 \end{listing}
 
-Na ispisu koda \ref{lst:main} je prikazana glavna funkcija, zvana
+Na ispisu koda \ref{lst:main} prikazana je glavna funkcija, zvana
 \mintinline{haskell}{startDaemon}, koja pokreće server.
 Funkcija prolazi skoro kroz sve korake koji su prikazani na slici
-\ref{fig:server_creation} u poglavlju \ref{subsect:haskell_net}, prvo stvara
+\ref{fig:server_creation} u poglavlju \ref{subsect:haskell_net}. Prvo stvara
 socket, te ga povezuje s lokalnom adresom i portom. Nakon toga se socket
 pretvara u pasivni socket koji prihvaća maksimalno 50 konekcija. Nakon stvaranja
-socketa i njegove pripreme stvara se jedna dijeljena varijabla te jedan
+socketa i njegove pripreme, stvara se jedna dijeljena varijabla te jedan
 komunikacijski kanal.
 
-Dijeljena varijabla će sadržavati mjerenu procesnu veličinu, to jest razinu vode
+Dijeljena varijabla sadržavati će mjerenu procesnu veličinu, to jest razinu vode
 u spremniku, dok će se komunikacijski kanal puniti sa željenim referentnim
 veličinama od strane klijenata. Kako pojedina referentna veličina stigne od
-strane klijenta ona se stavlja u komunikacijski kanal te će ih kasnije
-posrednička nit vaditi iz komunikacijskog kanala te proslijediti
+strane klijenta, ona se stavlja u komunikacijski kanal te će ih kasnije
+posrednička nit vaditi iz komunikacijskog kanala i proslijediti
 regulacijskoj niti.
 
 Na kraju se logika za socket server odvaja u novu nit sa
 \mintinline{haskell}{forkIO} funkcijom koja kao argument prima
 \mintinline{haskell}{serverLoop} funkciju i njene argumente. Glavna nit poziva
-\mintinline{haskell}{controllerBroker} funkciju koja će nastavit sa pripremom
+\mintinline{haskell}{controllerBroker} funkciju koja će nastavit s pripremom
 regulacijske niti.
 
 \begin{listing}[H]
@@ -116,23 +116,23 @@ serverLoop sock com = do
 
     serverLoop sock com
 \end{minted}
-\caption{Server mainloop}
+\caption{Glavna serveska petlja}
 \label{lst:serverLoop}
 \end{listing}
 
-Na ispisu koda \ref{lst:serverLoop} se vidi \mintinline{haskell}{serverLoop}
-funkcija, ona sa funkcijom \mintinline{haskell}{accept} čeka na konekciju
-klijenta, funkcija blokira sve dok se klijent ne spoji.
+Na ispisu koda \ref{lst:serverLoop} vidi se \mintinline{haskell}{serverLoop}
+funkcija. Ona skupa s funkcijom \mintinline{haskell}{accept} čeka na konekciju
+klijenta, a funkcija blokira sve dok se klijent ne spoji.
 
 Za svakog klijenta koji se spoji na server ispisuje se informacija o klijentu,
-pretvara se socket u handle sa \mintinline{haskell}{socketToHandle} funkcijom,
-te se stvara nova nit koja će izvržavati \mintinline{haskell}{runConn} funkciju,
-ona je zadužena za komunikaciju s klijentom te će obraditi sve zahtjeve koje
-klijent pošalje. Nakon pokretanja nove niti funkcija rekurzivno poziva samu
-sebe, rekurzivni poziv služi kao beskonačna petlja.
+socket se pretvara u handle pomoću \mintinline{haskell}{socketToHandle} funkcije,
+te se stvara nova nit koja će izvršavati \mintinline{haskell}{runConn} funkciju.
+Ona je zadužena za komunikaciju s klijentom te će obraditi sve zahtjeve koje
+klijent pošalje. Nakon pokretanja nove niti, funkcija rekurzivno poziva samu
+sebe. Rekurzivni poziv služi kao beskonačna petlja.
 
-Socket pretvoren u handle u \mintinline{haskell}{ReadWrite} mode-u te sa
-klijentima možemo komunicirati sa nizom standardnih IO funkcija:
+Socket je pretvoren u handle u \mintinline{haskell}{ReadWrite} modu i zato s
+klijentima možemo komunicirati nizom standardnih IO funkcija:
 
 \begin{itemize}
     \item \mintinline{haskell}{hGetChar :: Handle -> IO Char}
@@ -141,7 +141,7 @@ klijentima možemo komunicirati sa nizom standardnih IO funkcija:
     \item \mintinline{haskell}{hPutStr  :: Handle -> String -> IO ()}
 \end{itemize}
 
-Gore navedene funkcije su ekvivalentne standardnim C funkcijama:
+Gore navedene funkcije ekvivalentne su standardnim C funkcijama:
 \mintinline{haskell}{getchar}, \mintinline{haskell}{gets},
 \mintinline{haskell}{putchar} i \mintinline{haskell}{puts}.
 
@@ -165,23 +165,23 @@ runConn hdl com hostinfo = do
         C.hPutStrLn hdl response
         runConn hdl com hostinfo
 \end{minted}
-\caption{Client handler thread}
+\caption{Funkcija za klijentsku komunikaciju}
 \label{lst:client_handler}
 \end{listing}
 
-Na ispisu koda \ref{lst:client_handler} je \mintinline{haskell}{runConn}
-funkcija koja se brine o komunikaciji s klijentom. Komunikacija s klijentom se
-vrši pomoću \mintinline{haskell}{hGetLine} i
+Na ispisu koda \ref{lst:client_handler} nalazi se \mintinline{haskell}{runConn}
+funkcija koja se brine o komunikaciji s klijentom. Komunikacija s klijentom
+vrši se pomoću \mintinline{haskell}{hGetLine} i
 \mintinline{haskell}{hPutStr} funkcija. Ukoliko funkcija pronađe \emph{end of
-file} znak zatvara handle, ispisuje informaciju o odpajanju i gasi nit, ukoliko
-pročita čitavu liniju sprema string u \mintinline{haskell}{contents} varijablu.
+file} znak, ona zatvara handle, ispisuje informaciju o odpajanju i gasi nit. Ako
+pročita čitavu liniju, string sprema u \mintinline{haskell}{contents} varijablu.
 
-Nakon što je string spremit, ukoliko je to poželjno, ispisuje se njegov sadržaj
-te se poziva \mintinline{haskell}{handleMsg} funkcija koja obrađuje poruku
+Nakon što je string spremljen, ukoliko je to poželjno, ispisuje se njegov sadržaj
+te se poziva \mintinline{haskell}{handleMsg} funkcija, koja obrađuje poruku i,
 ukoliko je ona valjana, izvršava određenu radnju koja je zatražena u poruci te
 odgovor sprema u \mintinline{haskell}{response} varijablu. Odgovor se također
-ispisuje te se odgovor šalje spojenom klijentu. Na kraju funkcija rekurzivno
-poziva samu sebe da bi bila spremna obraditi sljedeći RPC poziv.
+ispisuje te se šalje spojenom klijentu. Na kraju funkcija rekurzivno
+poziva samu sebe kako bi bila spremna obraditi sljedeći RPC poziv.
 
 \begin{listing}[H]
 \centering
@@ -202,31 +202,31 @@ controllerBroker arduinoPort simulate (ProcCom pvMVar refChan) = do
 
     noticeM rootLoggerName "Shutting daemon down."
 \end{minted}
-\caption{Controler broker}
+\caption{Posredniča funkcija}
 \label{lst:controler broker}
 \end{listing}
 
 Ispis koda \ref{lst:controler broker} sadržava
-\mintinline{haskell}{controllerBroker} funkciju, ona je zadužena za pokretanje
+\mintinline{haskell}{controllerBroker} funkciju. Ona je zadužena za pokretanje
 regulacijske logike te za komunikaciju između klijenata i regulatora.
 
-Prvo se stvara nova dijeljena varijabla, ona će sadržavati referentnu veličinu
+Prvo se stvara nova dijeljena varijabla. Ona će sadržavati referentnu veličinu
 procesne varijable te će iz nje će regulator čitati referentnu veličinu. Stvara
-se nova nit koja čita redom referentne vrijednosti koje su postavili klijenti u
-komunikacijski kanal te je postavlja u dijeljenu varijablu, funkcija te niti
-je zapakirana u \mintinline{haskell}{forever} funkciju koja nam služi kao
-beskonaćna petlja.
+se nova nit, koja čita redom referentne vrijednosti koje su postavili klijenti u
+komunikacijski kanal te je postavlja u dijeljenu varijablu. Funkcija te niti
+je zapakirana u \mintinline{haskell}{forever} funkciju, koja nam služi kao
+beskonačna petlja.
 
-Nakon što je posrednička i komunikacijska nit stvorena funkcija je spremna
-pokrenuti regulator. Moguće je pokrenuti simulaciju postrojenja ukoliko arduino
-i postrojenje nisu spojeni sa \mintinline{haskell}{simulatorLoop}.
+Nakon što je posrednička i komunikacijska nit stvorena, funkcija je spremna
+pokrenuti regulator. Moguće je pokrenuti simulaciju postrojenja, ukoliko Arduino
+i postrojenje nisu spojeni s \mintinline{haskell}{simulatorLoop}.
 
-Ukoliko se ne pokreće simulacija postrojenja pokreće se
-\mintinline{haskell}{controlLoop} funkcija, u njoj je implementiran jednostavni
-PI regulator \cite[494]{control}. Nakon sto \mintinline{haskell}{controlLoop}
-funkcija završi zbog gašenja servera ili greške pri komunikaciji s regulatorom
+Ako se ne pokrene simulacija postrojenja, pokreće se
+\mintinline{haskell}{controlLoop} funkcija. U nju je implementiran jednostavni
+PI regulator \cite[494]{control}. Nakon što \mintinline{haskell}{controlLoop}
+funkcija završi, zbog gašenja servera ili greške pri komunikaciji s regulatorom,
 poziva se \mintinline{haskell}{shutDownArduino} funkcija koja šalje
-mikroupravljaču reset signal kako bi on bio u poznatom i ugašenom stanju.
+mikroupravljaču reset signal, kako bi on bio u poznatom i ugašenom stanju.
 
 Jedine dvije funkcije koje ovise o mikroupravljaču koji se koristi su
 \mintinline{haskell}{controlLoop} i \mintinline{haskell}{shutDownArduino} te se
@@ -250,7 +250,7 @@ Common flags:
   -V --version           Print version information
      --numeric-version   Print just the version number
 \end{minted}
-\caption{Daemon help}
+\caption{Pomoćni ispis servera}
 \label{lst:daemon_help}
 \end{listing}
 
@@ -267,13 +267,13 @@ vrijednosti i osvježavanje trenutne vrijednosti sustava) no to čini bez senzor
 i aktuatora, već je postrojenje matematički simulirano.
 
 Slijedeće dvije opcije \emph{debugregulator} i \emph{verbose} uključuju ispis za
-debugiranje regulatora ili servera. Sa \emph{debugregulator} regulacijska nit
+debugiranje regulatora ili servera. Pomoću \emph{debugregulator} regulacijska nit
 ispisuje informacije o stanju sustava i regulatora za svaku iteraciju
-regulacijske petlje, dok \emph{verbose} opcija ispiuje informacije o primljenim
-RPC pozivima te odgovarajućim odgovorima.
+regulacijske petlje, dok \emph{verbose} opcija ispisuje informacije o primljenim
+RPC-pozivima te odgovarajućim odgovorima.
 
 Ostale tri opcije \emph{help}, \emph{version} i \emph{numeric-version} ispisuju
-samo informacije o serveru te ne pokreću server, \emph{help} ispisuje
+samo informacije o serveru te ne pokreću server. \emph{help} ispisuje
 informacije o serveru viđene na ispisu koda \ref{lst:daemon_help},
 \emph{version} ispisuje ime i trenutnu verziju servera dok
 \emph{numeric-version} ispisuje samo trenutnu verziju.
@@ -281,10 +281,10 @@ informacije o serveru viđene na ispisu koda \ref{lst:daemon_help},
 \newpage
 \section{Klijent}
 
-Klijent je korisnicima najatraktivniji dio rada, on korisniku omogućuje pomoću
-grafičkog prikaza uvid u stanje postrojenja u stvanrom vremenu i lagano
+Klijent je najatraktivniji dio rada za korisnike. On korisniku preko grafičkog prikaza 
+omogućuje uvid u stanje postrojenja u stvarnom vremenu i lagano
 upravljanje postrojenjem. Klijent je pisan u Pythonu i pomoću asinkronog
-programskog modela je omogućen grafički prikaz koji je reaktivan te ne blokira
+programskog modela omogućen je grafički prikaz, koji je reaktivan te ne blokira
 izvođenje programa u niti jednom trenutku.
 
 \begin{listing}[H]
@@ -306,35 +306,35 @@ def main():
 
     loop.run()
 \end{minted}
-\caption{Client main loop}
+\caption{Početna funkcija klijenta}
 \label{lst:client main}
 \end{listing}
 
 Ispis koda \ref{lst:client main} sadržava main funkciju klijenta. Funkcija
-započinje sa stvaranjem socket-a te se odmah spaja na server. Nakon spajanja
-slijedi inicijalizacija grafičkih elemenata. Grafičko sučelje se sastoji od dva
+započinje stvaranjem socketa te se odmah spaja na server. Nakon spajanja
+slijedi inicijalizacija grafičkih elemenata. Grafičko sučelje sastoji se od dva
 grafička elementa: \mintinline{py3}{TankWidget} i \mintinline{py3}{CommandLine}.
 
-\mintinline{py3}{TankWidget} je zadužen za iscrtavanje shematskog prikaza
+\mintinline{py3}{TankWidget} zadužen je za iscrtavanje shematskog prikaza
 postrojenja. Iscrtava shemu spremnika vode i njegovo trenutno stanje. Za
-iscrtavanje koristi Unicode Brailleove znakove koji su se pojavili u 3.0 verziji
+iscrtavanje koristi Unicode-Brailleove znakove, koji su se pojavili u 3.0 verziji
 Unicode standarda \cite{unicode}.
 
 \mintinline{py3}{Commandline} stvara komandnu liniju koja je zadužena za
 primanje naredbi od strane korisnika te ih izvršava sam ukoliko su lokalne
-naredbe ili ih prosljeđuje serveru preko socket-a. Komandna linija podržava
+naredbe ili ih prosljeđuje serveru preko socketa. Komandna linija podržava
 standardne \emph{Emacs} kratice i upotpunjavanje naredbi pomoću \emph{tab}
 tipke.
 
-Nakon inicijalizacije grafičkog sučelja stvara se event loop te se dodaje prije
-stvoreni socket na listu praćenih događaja sa \mintinline{py3}{read_cb()}
-funkcijom koja se poziva ukoliko podatci stignu na socket. Također se dodaje
+Nakon inicijalizacije grafičkog sučelja stvara se event loop te se dodaje ranije
+stvoreni socket na listu praćenih događaja pomoću \mintinline{py3}{read_cb()}
+funkcije, koja se poziva ukoliko podatci stignu na socket. Također se dodaje
 vremenski događaj koji će pozvati \mintinline{py3}{periodic_tasks()} funkciju
-0.1 sekundu nakon što se event loop počne izvršavati, ona je zadužena za
+nakon 0.1 sekunde nakon što se event loop počne izvršavati. Ona je zadužena za
 periodičko osvježavanje stanja postrojenja.
 
-Na kraju se samo još pokreće event loop koji će se izvršavati sve dok korisnik
-pomoću komandne linije ne preda naredbu za gašenje programa.
+Na kraju se samo još pokreće event loop koji će se izvršavati sve dok korisnik,
+pomoću komandne linije, ne preda naredbu za gašenje programa.
 
 \begin{listing}[H]
 \centering
@@ -350,21 +350,21 @@ pomoću komandne linije ne preda naredbu za gašenje programa.
 
         loop.set_alarm_in(args.interval, periodic_tasks)
 \end{minted}
-\caption{Periodic update dings}
+\caption{Funkcija periodičkih poslova}
 \label{lst:periodic tasks}
 \end{listing}
 
-Na ispisu koda \ref{lst:periodic tasks} se vidi
-\mintinline{py3}{periodic_tasks()} funkcija. Ona stvara RPC poziv sa
-\emph{update-tank} metodom te ga šalje preko socket-a server-u.
+Na ispisu koda \ref{lst:periodic tasks} vidljiva je
+\mintinline{py3}{periodic_tasks()} funkcija. Ona stvara RPC poziv pomoću
+\emph{update-tank} metode te ga šalje serveru preko socketa.
 
 Nakon slanja RPC poziva poziva \mintinline{py3}{update()} metodu
-\emph{TankWidget} grafičkog elementa, ona ukoliko je došlo do promjene u stanju
-postrojenja osvježava iscrtavanje njegovog shematskog prikaza.
+\emph{TankWidget} grafičkog elementa. Ukoliko je došlo do promjene u stanju
+postrojenja, ona osvježava iscrtavanje njegovog shematskog prikaza.
 
-Na kraju se još dodaje novi vremenski događaj koji će pozvati
-\mintinline{py3}{periodic_tasks()} funkciju ponovno. Interval koliko često se
-izvršavaju periodički poslovi se može namjestiti od strane korisnika na
+Na kraju se još dodaje novi vremenski događaj koji će ponovno pozvati
+\mintinline{py3}{periodic_tasks()} funkciju. Interval tih periodičkih 
+poslova korisnik može namjestiti na
 komandnoj liniji pri pokretanju klijenta.
 
 \begin{listing}[H]
@@ -377,11 +377,11 @@ optional arguments:
   --host HOST           host to connect to (Default localhost)
   --interval INTERVAL   update interval
 \end{minted}
-\caption{Client help output}
+\caption{Pomoćni ispis klijenta}
 \label{lst:client_help}
 \end{listing}
 
-Na ispisu koda \ref{lst:client_help} su prikazane moguće opcije pri pokretanju
+Na ispisu koda \ref{lst:client_help} prikazane su moguće opcije pri pokretanju
 klijenta. \emph{help} opcija ispisuje informacije o klijentu viđene na ispisu
 koda \ref{lst:client_help}, \emph{port} opcija postavlja korišteni TCP port pri
 spajanju na server, \emph{host} opcija postavlja adresu koja će se koristiti pri
@@ -397,10 +397,10 @@ sustava i grafičkog sučelja.
 
 Na slici \ref{fig:client} je prikazano grafičko sučelje klijenta. Gornji dio
 grafičkog sučelja prikazuje shematski prikaz spremnika vode i razinu vode u
-stvarnom vremenu. Iznad razine vode ispisana je zadnje mjerena razina vode.
+stvarnom vremenu. Iznad razine vode ispisana je zadnje izmjerena razina vode.
 
 Ispod shematskog prikaza spremnika vode nalazi se informacijski dio komandne
-linije to jest statusna linija gdje su trenutno ispisane sve podržane naredbe:
+linije, to jest statusna linija gdje su trenutno ispisane sve podržane naredbe:
 \begin{itemize}
     \item quit
     \item q
@@ -412,35 +412,35 @@ linije to jest statusna linija gdje su trenutno ispisane sve podržane naredbe:
 \end{itemize}
 
 Naredbe su odvojene u lokalne i udaljene naredbe. Lokalne naredbe su: \emph{quit}
-i \emph{q}. Naredba \emph{quit} služi za gašenje klijenta, a naredba \emph{q} je
-samo alias na naredbu \emph{quit}.
+i \emph{q}. Naredba \emph{quit} služi za gašenje klijenta, a naredba \emph{q}
+samo je alias na naredbu \emph{quit}.
 
 Udaljene naredbe su: \emph{set-reference}, \emph{add}, \emph{seven},
 \emph{update-tank}, \emph{get-level}. Sve udaljene naredbe generiraju JSON-RPC
 poziv te ga šalju serveru i registriraju funkcije koje će obraditi odgovor kad
 on stigne.
 
-Naredba \emph{set-reference} je najvažnija naredba klijenta, ona nam omogućuje
+Naredba \emph{set-reference} je najvažnija naredba klijenta. Ona nam omogućuje
 promjenu referentne vrijednosti u stvarnom vremenu. Kao argument prima razinu
 vode u boci te ga spremi u JSON-RPC poziv. Ukoliko dolazi do greške, greška se
 ispisuje u statusnoj liniji.
 
 Naredba \emph{add} je testna naredba koja prima dva brojčana argumenta te ih
-serveru u JSON-RPC pozivu šalje. Server će zbrojiti primljene brojčane argumente
+šalje serveru u JSON-RPC pozivu. Server će zbrojiti primljene brojčane argumente
 i rezultat zbrajanja poslati natrag u JSON-RPC odgovoru. Nakon što odgovor
-stigne njegov rezultat bit će prikazan u statusnoj liniji.
+stigne, njegov rezultat bit će prikazan u statusnoj liniji.
 
-Naredba \emph{seven} je također testna naredba, ona šalje serveru unutar
-JSON-RPC poziva broj sedam. Server u JSON-RPC odgovoru šalje istu brojčanu
+Naredba \emph{seven} također je testna naredba. Ona serveru šalje, unutar
+JSON-RPC poziva, broj sedam. Server u JSON-RPC odgovoru šalje istu brojčanu
 vrijednost natrag. Naredba služi kao jednostavni \emph{echo} test. Rezultat
-odgovora se prikazuje u statusnoj liniji.
+odgovora prikazuje se u statusnoj liniji.
 
 \emph{update-tank} naredba je naredba koja se izvršava automatski kao dio
 periodičkih zadataka koje event loop obavlja. Naredba dohvaća trenutnu razinu
 postrojenja te ga prosljeđuje \mintinline{py3}{TankWidget} grafičkom elementu
-koji osvježava iscrtavanje shematskog prikaza ukoliko je došlo do promjene.
+koji osvježava iscrtavanje shematskog prikaza, ukoliko je došlo do promjene.
 \emph{get-level} naredba šalje isti JSON-RPC poziv kao i \emph{update-tank}
-naredba no umjesto da trenutnu razinu prosljedi grafičkom elementu za prikaz ona
+naredba, no umjesto da trenutnu razinu proslijedi grafičkom elementu za prikaz, ona
 razinu jednostavno prikaže u statusnoj liniji.
 
 Ispod statusne linije nalazi se sama komandna linija u koju je moguće prije
@@ -450,10 +450,10 @@ navedene naredbe upisati.
 \section{Postrojenje}
 
 Postrojenje je napravljeno u obliku makete spremnika u kojem se održava razina
-vode. Ulazni tok u spremnik je ostvaren pomoću vodene pumpe kojoj se brzinom
-može upravljati pomoću pulsno širinske modulacije. Izlazni tok spremnika je
-ostvaren pomoću otvora pri dnu spremnika te voda slobodnim padom teće iz
-spremnika. Razina u spremniku se direktno mjeri pomoću senzora.
+vode. Ulazni tok u spremnik ostvaren je pomoću vodene pumpe čijom se brzinom
+može upravljati pomoću pulsno širinske modulacije. Izlazni tok spremnika
+ostvaren je pomoću otvora pri dnu spremnika te voda slobodnim padom teče iz
+spremnika. Razina u spremniku direktno se mjeri pomoću senzora.
 
 \begin{figure}[H]
 \centering
@@ -515,21 +515,21 @@ spremnika. Razina u spremniku se direktno mjeri pomoću senzora.
 \label{fig:plant}
 \end{figure}
 
-Na slici \ref{fig:plant} se vidi postrojenje. Iznad glavnog spremnika se vidi
-ulazna cijev sa ulaznim tokom $q_{in}$ dok se u desnom dijelu glavnog spremnika
+Na slici \ref{fig:plant} vidi se postrojenje. Iznad glavnog spremnika vidi se
+ulazna cijev s ulaznim tokom $q_{in}$, dok se u desnom dijelu glavnog spremnika
 nalazi otvor za izlazni tok $q_{out}$.
 
-Razina vode u spremniku označena je sa $h$ dok je volumen koji voda zauzima u
-spremniku označen sa $V$. Površina poprečnog presjeka spremnika je označena sa
+Razina vode u spremniku označena je s $h$, dok je volumen koji voda zauzima u
+spremniku označen s $V$. Površina poprečnog presjeka spremnika označena je s
 $A$.
 
 \newpage
 \subsection{Matematički model postrojenja}
 
 
-Volumen vode u spremniku ovisi o ulaznom toku i izlaznom toku. Volumen će ostat
-konstantan ukoliko su ulazni i izlazni tok isti dok će se volumen vode mijenjati
-ovisno o razlici ulaznog toka i izlaznog toka, s toga možemo reći:
+Volumen vode u spremniku ovisi o ulaznom toku i izlaznom toku. Volumen će ostati
+konstantan, ukoliko su ulazni i izlazni tok isti, dok će se volumen vode mijenjati
+ovisno o razlici ulaznog toka i izlaznog toka te stoga možemo reći:
 
 \begin{equation}
     \frac{dV}{dt} = q_{in} - q_{out}
@@ -558,7 +558,7 @@ gdje je:
         \item[$h$] - visinska razina vode u spremniku
 \end{description}
 
-Pošto je spremnik cilindričnog oblika možemo za volumen spremnika vrijedi
+Budući da je spremnik cilindričnog oblika, za volumen spremnika možemo uzeti
 jednakost $V = A h$. Uvrštavanjem ulaznog i izlaznog toka te jednakosti za
 volumen u jednadžbu \ref{eq:first} dobiva se:
 
@@ -567,9 +567,9 @@ volumen u jednadžbu \ref{eq:first} dobiva se:
 \label{eq:nonlin}
 \end{equation}
 
-Iz jednadžbe \ref{eq:nonlin} se vidi da ona sadržava nelinearni element u obliku
-$a \sqrt{2gh}$, da bi uspješno mogli analizirati sustav i primjeniti Laplaceovu
-transformaciju jednadžba koja opisuje sustav mora biti linearizirana
+Iz jednadžbe \ref{eq:nonlin} je vidljivo da ona sadržava nelinearni element u obliku
+$a \sqrt{2gh}$. Kako bi uspješno mogli analizirati sustav i primijeniti Laplaceovu
+transformaciju, jednadžba koja opisuje sustav mora biti linearizirana
 \cite[88-97]{control}:
 
 \begin{equation} \frac{d\delta h}{dt} = \frac{k_p}{A} \delta U -
@@ -580,18 +580,18 @@ gdje je:
         \item[$h_0$] - radna točka oko koje je sustav lineariziran
 \end{description}
 
-Konstantne vrijednosti uz $\delta U$ i $\delta h$ se radi jednostavnosti mogu
+Konstantne vrijednosti, uz $\delta U$ i $\delta h$, mogu se jednostavnosti radi
 staviti u poseban izraz:
 
 \begin{equation}
     \frac{d\delta h}{dt} = k_1 \delta U - k_2 \delta h
 \end{equation}
 
-Sada se može primjeniti Laplaceova transformacija \cite[35-44]{control} pri čemu
-dobiva se:
+Sada se može primijeniti Laplaceova transformacija \cite[35-44]{control} pri čemu
+se dobiva:
 \begin{equation} s H(s) = k_1 U(s) - k_2 H(s) \end{equation}
 
-Nakon grupiranja $H(s)$ elemenata na lijevoj strani jednadžbe dobiva se:
+Nakon grupiranja $H(s)$ elemenata na lijevoj strani jednadžbe, dobiva se:
 \begin{equation} H(s)(s+k_2) = k_1 U(s) \end{equation}
 
 Te konačno se dobiva prijenosna funkcija sustava \cite[45]{control}:
@@ -600,9 +600,9 @@ Te konačno se dobiva prijenosna funkcija sustava \cite[45]{control}:
 \label{eq:transfer}
 \end{equation}
 
-Iz jednadžbe \ref{eq:transfer} se vidi da jednadžba predstavlja sustav prvog
-reda \cite[166]{control}. Osim što je sustav poprilično jednostavan on je i samo
-stabilizirajući \cite{control_guru} tj. za svaku ulaznu veličinu sustav će se
+Iz jednadžbe \ref{eq:transfer} je vidljivo da jednadžba predstavlja sustav prvog
+reda \cite[166]{control}. Osim što je sustav poprilično jednostavan, on je i samo
+stabilizirajući \cite{control_guru}, tj. za svaku ulaznu veličinu sustav će se
 nakon određenog vremena stabilizirati.
 
 Zbog jednostavnosti sustava možemo odabrati jednostavni PI regulator koji će
@@ -611,19 +611,19 @@ stacionarnog stanja.
 
 \subsection{Senzor i aktuator}
 
-Da bi regulator mogao obavljati svoj posao mora imati uvid u stanje sustava te
-mora imat način na koji promjeniti stanje. Uvid u stanje regulatoru pruža senzor
-razine tekućine a promjena stanja je moguća pomoću pumpe tekućine.
+Da bi regulator mogao obavljati svoj posao, mora imati uvid u stanje sustava te
+mora imati način na koji promijeniti stanje. Uvid u stanje regulatoru pruža senzor
+razine tekućine, a promjena stanja moguća je pomoću pumpe tekućine.
 
 Za senzor je korišten \emph{eTape} senzor razine tekućine \cite{etape}. Senzor
-je realiziran kao promjenjivi otpornik čiji se otpor mijenja ovisno na kojem
-dijelu senzora hidostatski tlak tekućine pritišće senzora. Izlazni otpor senzora
-je inverzno proporcionalan sa razinom tekućine.
+je realiziran kao promjenjivi otpornik, čiji se otpor mijenja ovisno na kojem
+dijelu senzora hidrostatski tlak tekućine pritišće senzora. Izlazni otpor senzora
+obrnuto je proporcionalan razini tekućine.
 
-Radi veće preciznosti mjerenja izlazni otpor senzora pretvara se u napon raspona
-od \unit{0-5}{\volt}. Pretvorba izlaznog otpora u napon je ostvarena pomoću
+Radi veće preciznosti mjerenja, izlazni otpor senzora pretvara se u napon raspona
+od \unit{0-5}{\volt}. Pretvorba izlaznog otpora u napon ostvarena je pomoću
 \emph{\unit{0-5}{\volt} Linear Resistance to Voltage Module} istog proizvođača
-kao i senzor \cite{voltage_module}.
+kao i senzora \cite{voltage_module}.
 
 \begin{table}[h]
 \setlength{\tabcolsep}{14pt}
@@ -648,8 +648,8 @@ kao i senzor \cite{voltage_module}.
     \label{tbl:etape}
 \end{table}
 
-U tablici \ref{tbl:etape} se vide mjerene naponske vrijednosti senzora uz
-određene razine vode. Senzor ima mrtvi pojas od \unit{0-2.54}{\centi\metre} u
+U tablici \ref{tbl:etape} se nalaze mjerene naponske vrijednosti senzora uz
+određene razine vode. Senzor ima mrtvi pojas od \unit{0-2.54}{\centi\metre}, u
 kojem se otpor te u konačnici napon ne mijenjaju.
 
 \begin{figure}[H]
@@ -701,7 +701,7 @@ Minimalni napon pumpe je \unit{3}{\volt}, a maksimalni \unit{12}{\volt}.
     \label{tbl:pump}
 \end{table}
 
-U tablici \ref{tbl:etape} se vidi mjereni protok pumpe senzora uz
+U tablici \ref{tbl:etape} se nalazi mjereni protok pumpe senzora uz
 određene naponske razine.
 
 \begin{figure}[H]
@@ -725,9 +725,9 @@ određene naponske razine.
 \end{figure}
 
 Na grafu \ref{fig:pump} se vidi promjena protoka pumpe ovisno o naponskoj
-razini. Zbog ograničenog maksimalnog protoka pumpe brzina odziva sustava ovisi o
-veličini spremnika. Za relativno brz odziv sustava je odabrana boca volumena od
-\unit{1}{\litre}. Boca je cilindričnog oblika radius joj je
+razini. Zbog ograničenog maksimalnog protoka pumpe, brzina odziva sustava ovisi o
+veličini spremnika. Za relativno brz odziv sustava odabrana je boca volumena od
+\unit{1}{\litre}. Boca je cilindričnog oblika, radijus joj je
 \unit{4}{\centi\metre}, a visina nešto ispod \unit{20}{\centi\metre}. Zbog
 mrtvog pojasa senzora regulacija ispod \unit{3}{\centi\metre} nije moguća.
 
@@ -759,29 +759,29 @@ je:
 \end{description}
 
 Shema također prikazuje spojeve između svih komponenti postrojenja. Analogni
-ulaz Arduina A0 je spojen na izlaz IC3 modula. Arduino na analognom ulazu A0
-prima \unit{0-5}{\volt} signal koji je proporcionalan sa razinom vode. Na
+ulaz Arduina A0 spojen je na izlaz IC3 modula. Arduino na analognom ulazu A0
+prima \unit{0-5}{\volt} signal koji je proporcionalan razini vode. Na
 \emph{L293E} integriranom krugu su pinovi za pogon prvog i četvrtog kanala
-kratkospojeni te se opterećenje tjekom rada raspodjeljuje na oba kanala.
+kratko spojeni te se opterećenje tijekom rada raspodjeljuje na oba kanala.
 
-Digitalni pin D2 koji je konfiguriran kao izlaz je spojen na \emph{Chip Enable}
-pin \emph{L293E} integriranog kruga, s njime se upravlja aktivaciju pogonskih
+Digitalni pin D2, koji je konfiguriran kao izlaz, spojen je na \emph{Chip Enable}
+pin \emph{L293E} integriranog kruga. Njime se upravlja aktivacija pogonskih
 kanala integriranog kruga. Napon na izlazu \emph{L293E} integriranog kruga ovisi
-o naponu na ulazu, ulaznim naponom upravljamo pomoću izlaznog pina D3 na
+o naponu na ulazu. Ulaznim naponom upravljamo pomoću izlaznog pina D3 na
 Arduinu.
 
-D3 pin Arduina je konfiguriran kao pulsno širinski izlazni pin. Izlazni
-pin \emph{L293E} integriranog kruga je spojen na pumpu. Paralelno s pumpom je u
-spoju dioda D1, ona štiti strujni krug od induktivnog napona koji se pojavljuje
+D3 pin Arduina konfiguriran je kao pulsno širinski izlazni pin. Izlazni
+pin \emph{L293E} integriranog kruga spojen je na pumpu. Paralelno s pumpom u
+spoju je dioda D1. Ona štiti strujni krug od induktivnog napona koji se pojavljuje
 pri gašenju pumpe.
 
 \subsection{Regulator}
 
-Regulator koji je dio servera komunicira s Arduinom te pomoću Arduina upravlja s
-postrojenjem. Osnovna zadaća mu je primiti željenu referentnu vrijednost te
-sustav dovesti u novo stacionarno stanje i držati ga tamo.
+Regulator, koji je dio servera, komunicira s Arduinom te pomoću Arduina upravlja
+postrojenjem. Osnovna mu je zadaća primiti željenu referentnu vrijednost te
+sustav dovesti u novo, stacionarno stanje i zadržati ga ondje.
 
-Radi jednostavnosti i niskog reda sustava za regulator je odabran PI
+Radi jednostavnosti i niskog reda sustava, kao regulator odabran je PI
 regulacijski algoritam.
 
 \begin{listing}[H]
@@ -809,30 +809,30 @@ forever $ do
 \label{lst:regulator}
 \end{listing}
 
-Na ispisu koda \ref{lst:regulator} je prikazana regulacijska funkcija koja se
+Na ispisu koda \ref{lst:regulator} prikazana je regulacijska funkcija koja se
 nalazi unutar servera. Prvo se uzima referenca i vrijednost integratora iz dijeljenih varijabli.
 \mintinline{haskell}{integralMVar} je interna varijabla regulatora gdje se
-sprema akumulirana vrijednost integratora dok je \mintinline{haskell}{refMVar}
+sprema akumulirana vrijednost integratora, dok je \mintinline{haskell}{refMVar}
 dijeljena varijabla u koju posrednička funkcija stavlja referentnu vrijednost.
 
-Odmah nakon čitanja dijeljenih varijabli zatražuje se od Arduina trenutna
+Odmah nakon čitanja dijeljenih varijabli, od Arduina se traži trenutna
 razina vode pomoću \mintinline{haskell}{analogRead} funkcije. Razina se pretvara
 iz naponske vrijednosti u visinu pomoću \mintinline{haskell}{sensorValueFunc} te
 se sprema u \mintinline{haskell}{fillHeight} varijablu i prosljeđuje ostatku
-servera spremajući je u za to namjenjenu dijeljenu varijablu.
+servera, spremajući je u za to namijenjenu dijeljenu varijablu.
 
-Nakon što je mjerenje izvršeno i preuzeta je trenutna referentna vrijednost,
+Nakon što je mjerenje izvršeno i trenutna referentna vrijednost preuzeta,
 pomoću istih se računa odstupanje od referentne vrijednosti te se sprema u
-\mintinline{haskell}{error} varijablu. Integralni dio regulatora se sprema u
-prije spomenutu varijablu \mintinline{haskell}{integralMVar} koja će je
+\mintinline{haskell}{error} varijablu. Integralni dio regulatora sprema se u
+prije spomenutu varijablu \mintinline{haskell}{integralMVar}, koja će ju
 sačuvati za sljedeću iteraciju regulacijske petlje.
 
-Sada se mogu proporcionalni i integralni članovi regulatora izračunati te
+Sada se mogu proporcionalni i integralni članovi regulatora izračunati i
 zbrojiti. Funkcija \mintinline{haskell}{clampAndScaleOutput} ograničava izlaz
-regulatora na operativni raspon pumpe, brine se o tome da pumpa ne pokušava
+regulatora na operativni raspon pumpe i brine se o tome da pumpa ne pokušava
 raditi na naponu ispod \unit{3}{\volt}.
 
-Preostaje samo poslati novu naponsku razinu na Arduinu te će ju on primjeniti na
+Preostaje samo poslati novu naponsku razinu na Arduino, a on će ju primijeniti na
 pulsno širinskom pinu i tako postaviti protok pumpe. Nakon toga petlja čeka
 određeno vrijeme te ponovno izvršava sve navedene korake.
 
@@ -840,18 +840,16 @@ određeno vrijeme te ponovno izvršava sve navedene korake.
 \centering
 \begin{tikzpicture}
     \begin{axis}[width=350, xlabel=Vrijeme (\second), ylabel=Razina vode
-                 (\centi\metre), grid=major, xmin=0, xmax=30,
+                 (\centi\metre), grid=major, xmin=0, xmax=120,
                  ymin=0, ymax=20]
-                 \addplot[samples=100, domain=0:30, dashed] { 15 };
-%                 \addplot table [x=a, y=c, col sep=comma] {data.csv};
-                 \addplot[scale=2, color=MidnightBlue, samples=100, domain=0:30] {
-                    ln(x) * 5
-                 };
+                 \addplot[samples=100, domain=0:120, dashed] { 15 };
+                 \addplot[MidnightBlue, very thick] 
+                    table [x=time, y=height, col sep=comma] {regulator_response.csv};
     \end{axis}
 \end{tikzpicture}
 \caption{Graf odziva regulatora}
 \label{fig:step_response}
 \end{figure}
 
-Na slici \ref{fig:step_response} je prikazan odziv regulatora uz $k_p = 4$ i
+Na slici \ref{fig:step_response} je prikazan izmjereni odziv regulatora uz $k_p = 4$ i
 $k_i = 1.5$.
