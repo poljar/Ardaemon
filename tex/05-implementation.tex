@@ -281,7 +281,7 @@ informacije o serveru viđene na ispisu koda \ref{lst:daemon_help},
 \newpage
 \section{Klijent}
 
-Klijent je najatraktivniji dio rada za korisnike. On korisniku preko grafičkog prikaza 
+Klijent je najatraktivniji dio rada za korisnike. On korisniku preko grafičkog prikaza
 omogućuje uvid u stanje postrojenja u stvarnom vremenu i lagano
 upravljanje postrojenjem. Klijent je pisan u Pythonu i pomoću asinkronog
 programskog modela omogućen je grafički prikaz, koji je reaktivan te ne blokira
@@ -363,7 +363,7 @@ Nakon slanja RPC poziva poziva \mintinline{py3}{update()} metodu
 postrojenja, ona osvježava iscrtavanje njegovog shematskog prikaza.
 
 Na kraju se još dodaje novi vremenski događaj koji će ponovno pozvati
-\mintinline{py3}{periodic_tasks()} funkciju. Interval tih periodičkih 
+\mintinline{py3}{periodic_tasks()} funkciju. Interval tih periodičkih
 poslova korisnik može namjestiti na
 komandnoj liniji pri pokretanju klijenta.
 
@@ -843,7 +843,7 @@ određeno vrijeme te ponovno izvršava sve navedene korake.
                  (\centi\metre), grid=major, xmin=0, xmax=120,
                  ymin=0, ymax=20]
                  \addplot[samples=100, domain=0:120, dashed] { 15 };
-                 \addplot[MidnightBlue, very thick] 
+                 \addplot[MidnightBlue, very thick]
                     table [x=time, y=height, col sep=comma] {regulator_response.csv};
     \end{axis}
 \end{tikzpicture}

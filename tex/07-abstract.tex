@@ -5,39 +5,42 @@
 Pojavom jeftinih mikroupravljača i mini računala mogućnosti povezivanja
 fizikalnog svijeta s digitalnim postaju sve veće.
 Svrha diplomskog rada je ispitivanje mogućnost korištenja jeftinih mikroupravljača
-za jednostavne poslove automatizacije kao i udaljenog upravljanja postrojenja 
+za jednostavne poslove automatizacije kao i udaljenog upravljanja postrojenja
 preko \emph{socket} \emph{servera}.
 
-Za mikroupravljač \emph{Arduino Uno} preko USB-serijskog sučelja i preko \emph{Firmata} 
-protokola komunicira s računalom. Na njega je je vodena pumpa i senzor koji mjeri 
-razinu vode u boci te sustav od dvije boce. Na računalu se nalazi \emph{socket} \emph{server} 
-pisan u \emph{Haskellu} koji upravlja mikroupravljačem. Testni klijent pisan u 
-\emph{Pythonu} spaja se na \emph{server} te dohvaća mjernu veličinu 
+Za mikroupravljač \emph{Arduino Uno} preko USB-serijskog sučelja i preko \emph{Firmata}
+protokola komunicira s računalom. Na njega je je vodena pumpa i senzor koji mjeri
+razinu vode u boci te sustav od dvije boce. Na računalu se nalazi \emph{socket} \emph{server}
+pisan u \emph{Haskellu} koji upravlja mikroupravljačem. Testni klijent pisan u
+\emph{Pythonu} spaja se na \emph{server} te dohvaća mjernu veličinu
 i prikazuje trenutno stanje sustava.
 
-Rad je podijeljen u dva dijela: teorijski dio koji detaljno opisuje proces razvoja socket 
-servera te praktični dio koji se bavi implementacijom postrojenja, regulatora, \
-emph{socket servera} i popratnog klijenta.
+Rad je podijeljen u dva dijela: teorijski dio koji detaljno opisuje proces razvoja socket
+servera te praktični dio koji se bavi implementacijom postrojenja, regulatora,
+\emph{socket servera} i popratnog klijenta.
 \\
 
 \noindent\textbf{Ključne riječi:} Haskell, Arduino, Automatizacija,
 Python, Socket server, Firmata
 \chapter*{Abstract}
+{\large\bfseries\MakeUppercase{A socket server for data transmission from a manufacturing plant}}
+\\
+
 The rise of cheap microcontrollers and mini computers have enabled new possibilities
 of connecting the physical world with the digital.
-The purpose of this paper is to explore the possibilities of cheap microcontrollers 
+The purpose of this paper is to explore the possibilities of cheap microcontrollers
 for simple automation as well as to enable remote control using a socket server.
 
-The microcontroller Arduino Uno was chosen which communicates through the USB 
-interface and the  Firmata protocol with the computer. A water pump and a sensor, 
-which measures the water level, were connected as well as two bottles. 
-The computer is equipped with a socket server written in Haskell 
-which controls the microcontroller. The test client written in Python is being 
-connected to the server and pumps the requested amount of water and shows the 
+The microcontroller Arduino Uno was chosen which communicates through the USB
+interface and the  Firmata protocol with the computer. A water pump and a sensor,
+which measures the water level, were connected as well as two bottles.
+The computer is equipped with a socket server written in Haskell
+which controls the microcontroller. The test client written in Python is being
+connected to the server and pumps the requested amount of water and shows the
 current system status.
 
-The paper is divided into two parts. The first part shall elaborate the theoretical presuppositions 
-regarding the subject matter. The second shall address the implementation of the system, 
+The paper is divided into two parts. The first part shall elaborate the theoretical presuppositions
+regarding the subject matter. The second shall address the implementation of the system,
 the regulators, the socket servera and the accompanying client.
 \\
 
