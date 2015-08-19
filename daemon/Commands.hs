@@ -14,8 +14,8 @@ data ProcCom m = ProcCom {processVar :: MVar m, referenceChan :: Chan m}
 
 type Server = ReaderT (ProcCom PVType) IO
 
-methods :: Methods Server
-methods = toMethods [add, seven, getLevel, setReference]
+methods :: [Method Server]
+methods = [add, seven, getLevel, setReference]
 
 add :: Method Server
 add = toMethod "add" f (Required "x" :+: Required "y" :+: ())
